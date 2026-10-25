@@ -8,7 +8,9 @@ namespace RockSoftware\Ui\View;
  * sets an instance as the `mainMenu` view variable (usually in
  * `AppController::beforeRender()`).
  *
- * A group has a title, a Bootstrap Icons class (`bi bi-…`) and its items. An
+ * A group has a title, a Bootstrap Icons class (`bi bi-…`) and its items. A
+ * group with a `url` (a URL array) and no items is one direct link instead:
+ * it looks like a group, opens no flyout and is active the way an item is. An
  * item has a title and a URL array; it is active when the request's
  * controller and plugin match its URL's. An item with a `badge` key shows the
  * count `badgeCounts()` gives under that key when it is above zero, with
@@ -19,7 +21,7 @@ interface MainMenuInterface
     /**
      * The groups the signed-in person sees, in order.
      *
-     * @return array<int, array{title: string, icon: string, items: array<int, array{title: string, url: array<string, mixed>, badge?: string, badgeLabel?: string}>}>
+     * @return array<int, array{title: string, icon: string, url?: array<string, mixed>, items?: array<int, array{title: string, url: array<string, mixed>, badge?: string, badgeLabel?: string}>}>
      */
     public function groups(): array;
 

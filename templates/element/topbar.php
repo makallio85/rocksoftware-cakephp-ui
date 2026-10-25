@@ -1,7 +1,8 @@
 <?php
 /**
  * Top bar: hamburger and brand (or, with the breadcrumb on, the breadcrumb)
- * on the left, the user menu on the right.
+ * on the left; the application's own controls (`Ui.elements` place
+ * `topbarEnd`) and the user menu on the right.
  *
  * The signed-in person, the other applications and sign-out come from the
  * sign-in plugin (`UiHelper::userMenuItems()`); the frame only gives them
@@ -11,6 +12,7 @@
  */
 $this->loadHelper('RockSoftware/Ui.Ui');
 $menuItems = $this->Ui->userMenuItems();
+$topbarEnd = $this->Ui->elements('default', 'topbarEnd');
 ?>
 <header class="kk-topbar">
     <button class="kk-icon-btn kk-hamburger" type="button"
@@ -30,8 +32,12 @@ $menuItems = $this->Ui->userMenuItems();
         ) ?>
     <?php endif; ?>
 
-    <?php if ($menuItems !== []) : ?>
+    <?php if ($menuItems !== [] || $topbarEnd !== '') : ?>
     <div class="kk-topbar-right">
+        <?php if ($topbarEnd !== '') : ?>
+        <div class="kk-topbar-end"><?= $topbarEnd ?></div>
+        <?php endif; ?>
+        <?php if ($menuItems !== []) : ?>
         <div class="dropdown">
             <button class="kk-user-btn" type="button" id="kkUserMenu"
                     data-bs-toggle="dropdown" aria-expanded="false"
@@ -89,6 +95,7 @@ $menuItems = $this->Ui->userMenuItems();
                 <?php endforeach; ?>
             </ul>
         </div>
+        <?php endif; ?>
     </div>
     <?php endif; ?>
 </header>

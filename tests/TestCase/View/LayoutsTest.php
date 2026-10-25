@@ -76,11 +76,40 @@ class LayoutsTest extends TestCase
         $this->get('/reports');
 
         $body = $this->body();
-        $this->assertStringContainsString('<span class="group-title">Home</span>', $body);
+        $this->assertStringContainsString('<span class="group-title">Work</span>', $body);
+        $this->assertStringContainsString('<span class="group-title">Settings</span>', $body);
         $this->assertStringContainsString('<i class="group-icon bi bi-briefcase"></i>', $body);
         $this->assertSame(1, substr_count($body, 'aria-current="page"'));
         $this->assertMatchesRegularExpression('#<a href="/reports" class="active" aria-current="page">Reports</a>#', $body);
-        $this->assertMatchesRegularExpression('#<a href="/">Dashboard</a>#', $body);
+        $this->assertMatchesRegularExpression('#<a href="/preferences">Preferences</a>#', $body);
+    }
+
+    public function testLinkGroupIsOneDirectLinkWithoutFlyout(): void
+    {
+        $this->get('/reports');
+
+        $body = $this->body();
+        $this->assertStringContainsString(
+            '<div class="kk-group kk-group-link">'
+            . "\n" . '            <a href="/" class="group-btn"><i class="group-icon bi bi-house"></i>'
+            . '<span class="group-title">Dashboard</span></a>',
+            $body,
+        );
+        // One caret and one flyout per group with items, none for the link.
+        $this->assertSame(2, substr_count($body, 'group-caret'));
+        $this->assertSame(2, substr_count($body, '<div class="sub">'));
+    }
+
+    public function testLinkGroupIsActiveOnItsPage(): void
+    {
+        $this->get('/');
+
+        $body = $this->body();
+        $this->assertStringContainsString(
+            '<a href="/" class="group-btn active" aria-current="page"><i class="group-icon bi bi-house"></i>',
+            $body,
+        );
+        $this->assertSame(1, substr_count($body, 'aria-current="page"'));
     }
 
     public function testBadgeShowsItsCountWhenAboveZero(): void
@@ -173,6 +202,39 @@ class LayoutsTest extends TestCase
         } finally {
             Configure::write('debug', true);
         }
+    }
+
+    public function testTopbarEndRendersBeforeTheUserMenu(): void
+    {
+        Configure::write('Ui.elements', ['default' => ['topbarEnd' => ['demo_topbar_end']]]);
+        Configure::write('TestApp.userMenuItems', [
+            ['type' => 'sign_out', 'label' => 'Sign out', 'url' => '/sign-out'],
+        ]);
+        $this->get('/');
+
+        $body = $this->body();
+        $this->assertStringContainsString('<div class="kk-topbar-end"><form method="get" action="/"', $body);
+        $this->assertGreaterThan(strpos($body, '<div class="kk-topbar-right">'), strpos($body, 'id="demo-topbar-end"'));
+        $this->assertLessThan(strpos($body, 'id="kkUserMenu"'), strpos($body, 'id="demo-topbar-end"'));
+        $this->assertLessThan(strpos($body, '</header>'), strpos($body, 'id="demo-topbar-end"'));
+    }
+
+    public function testTopbarEndRendersWithoutAUserMenu(): void
+    {
+        Configure::write('Ui.elements', ['default' => ['topbarEnd' => ['demo_topbar_end']]]);
+        $this->get('/');
+
+        $this->assertResponseContains('<div class="kk-topbar-right">');
+        $this->assertResponseContains('id="demo-topbar-end"');
+        $this->assertResponseNotContains('kkUserMenu');
+    }
+
+    public function testTopbarEndIsLeftOutWhenNotConfigured(): void
+    {
+        $this->get('/');
+
+        $this->assertResponseNotContains('kk-topbar-end');
+        $this->assertResponseNotContains('kk-topbar-right');
     }
 
     public function testUserMenuIsLeftOutWithoutEntries(): void

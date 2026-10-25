@@ -92,7 +92,8 @@
             group.classList.add('collapsed');
         }
 
-        if (button) {
+        // A group that is one direct link has nothing to expand.
+        if (button && sub) {
             // Phones: tap to expand or collapse. Desktop: the flyout opens on
             // hover, so the click only blurs the button to let it close again.
             button.addEventListener('click', function () {
