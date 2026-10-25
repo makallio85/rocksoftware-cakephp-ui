@@ -45,6 +45,11 @@ final class DemoMainMenu implements MainMenuInterface
                 ],
             ],
             [
+                'title' => 'Components',
+                'icon' => 'bi bi-grid',
+                'url' => ['plugin' => null, 'controller' => 'Components', 'action' => 'index'],
+            ],
+            [
                 'title' => 'Settings',
                 'icon' => 'bi bi-gear',
                 'items' => [

@@ -19,6 +19,9 @@ if (PHP_SAPI === 'cli-server' && is_file(__DIR__ . parse_url((string)$_SERVER['R
 
 require dirname(__DIR__, 2) . '/bootstrap.php';
 
+// Redirects go back to the sandbox's own address.
+Configure::write('App.fullBaseUrl', 'http://' . ($_SERVER['HTTP_HOST'] ?? '127.0.0.1:8085'));
+
 Configure::write('Ui', [
     'appName' => 'Demo App',
     'brandIcon' => 'bi bi-rocket',

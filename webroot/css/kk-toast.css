@@ -1,0 +1,67 @@
+/* Short messages in a corner, from the `toast` component (js/components/kk-toast.js):
+   top-right under the top bar on desktop, at the bottom on phones, above every
+   other layer. */
+#kk-toast-container {
+    position: fixed;
+    top: calc(var(--kk-topbar-h, 0px) + 1rem);
+    right: 1rem;
+    z-index: 2010;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    width: min(360px, calc(100vw - 2rem));
+    pointer-events: none;
+}
+.kk-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    color: #212529;
+    font-size: .875rem;
+    line-height: 1.35;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
+    overflow-wrap: anywhere;
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateX(12px);
+    transition: opacity .18s ease, transform .18s ease;
+}
+.kk-toast.kk-toast-show { opacity: 1; transform: none; }
+.kk-toast-dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    margin-top: 6px;
+    border-radius: 50%;
+}
+.kk-toast-success .kk-toast-dot { background: #198754; }
+.kk-toast-danger .kk-toast-dot { background: #dc3545; }
+.kk-toast-warning .kk-toast-dot { background: #d97706; }
+.kk-toast-info .kk-toast-dot { background: var(--kk-accent, #4f46e5); }
+.kk-toast-message { flex: 1 1 auto; }
+.kk-toast-message strong { font-weight: 600; }
+.kk-toast-close {
+    flex: none;
+    margin: -4px -6px -4px 0;
+    padding: 4px 6px;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: #6c757d;
+    font-size: .75rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.kk-toast-close:hover { color: #212529; background: #f1f5f9; }
+@media (max-width: 575.98px) {
+    #kk-toast-container { top: auto; bottom: 1rem; left: 1rem; right: 1rem; width: auto; }
+    .kk-toast { transform: translateY(12px); }
+    .kk-toast-close { min-width: 44px; min-height: 44px; margin: -12px -14px -12px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .kk-toast { transition: none; }
+}

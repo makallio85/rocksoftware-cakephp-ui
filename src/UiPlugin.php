@@ -42,8 +42,11 @@ class UiPlugin extends BasePlugin
      *   the menu's pin and its collapsed groups.
      * - `components`: the optional components to load, each `true` or
      *   `false`: `breadcrumb` (the trail in the top bar, from the
-     *   `breadcrumb` view variable), `modal` (`window.KkModal`) and
-     *   `listTable` (`window.KkListTable`).
+     *   `breadcrumb` view variable), `modal` (`window.KkModal`),
+     *   `listTable` (`window.KkListTable`), `confirm` (the confirmation
+     *   dialog of buttons with `data-confirm`; also loaded on any page that
+     *   renders `UiHelper::postButton()` with a `confirm` message) and
+     *   `toast` (`window.appBanner`, short messages in a corner).
      * - `elements`: the application's own elements the layouts render, by
      *   layout (`default`, `auth`, `error`) and place: `head` (after the
      *   frame's styles), `topbarEnd` (in the top bar before the user menu,
@@ -51,6 +54,8 @@ class UiPlugin extends BasePlugin
      *   `bodyEnd` (after the frame's scripts, before the `script` block).
      * - `locale`: the language of the frame's texts when it differs from the
      *   application's locale (e.g. `fi`); null follows the application.
+     * - `displayTimezone`: the time zone `UiHelper::dateTime()` shows moments
+     *   in.
      *
      * @var array<string, mixed>
      */
@@ -67,9 +72,12 @@ class UiPlugin extends BasePlugin
             'breadcrumb' => false,
             'modal' => false,
             'listTable' => false,
+            'confirm' => false,
+            'toast' => false,
         ],
         'elements' => [],
         'locale' => null,
+        'displayTimezone' => 'Europe/Helsinki',
     ];
 
     /** The settings key under `Configure`. */

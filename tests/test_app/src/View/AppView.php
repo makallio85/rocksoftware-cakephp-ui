@@ -17,5 +17,8 @@ class AppView extends View
     public function initialize(): void
     {
         $this->setTheme(UiPlugin::NAME);
+        // As an application that uses the shared pieces in its templates.
+        $this->addHelper('RockSoftware/Ui.Ui');
+        $this->addHelper('Form', ['className' => 'RockSoftware/Ui.Form']);
     }
 }

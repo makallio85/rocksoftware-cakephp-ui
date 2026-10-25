@@ -66,3 +66,30 @@ msgstr "Valitse rivi"
 
 msgid "Select all"
 msgstr "Valitse kaikki"
+
+msgid "Actions"
+msgstr "Toiminnot"
+
+msgid "More actions"
+msgstr "Lisää toimintoja"
+
+msgid "Showing {{start}}–{{end}} of {{count}}"
+msgstr "Näytetään {{start}}–{{end}} / {{count}}"
+
+msgid "Previous page"
+msgstr "Edellinen sivu"
+
+msgid "Next page"
+msgstr "Seuraava sivu"
+
+msgid "Pages"
+msgstr "Sivut"
+
+msgid "Are you sure?"
+msgstr "Oletko varma?"
+
+msgid "Confirm"
+msgstr "Vahvista"
+
+msgid "Cancel"
+msgstr "Peruuta"

@@ -35,10 +35,19 @@ frame and none keeps its own copy.
 
   `modal` and `listTable` are Vue 3 components; the application loads Vue itself as `window.Vue`
   and registers them (`app.component('kk-modal', window.KkModal)`).
+  - `confirm`: the confirmation dialog of buttons and links with `data-confirm`, and
+    `window.KkConfirm.ask()`; loaded by itself on a page that renders an asking
+    `Ui->postButton()`;
+  - `toast`: `window.appBanner`, short messages in a corner.
+
+  `confirm` and `toast` are plain scripts: no Vue, no build step.
+- **Shared in-page pieces** (below): badges, the page header, the kebab menu, the confirmation,
+  pagination, toasts, the empty state, form help texts, scrolling tab strips and the date and
+  number formats.
 
 ## Installing in an application
 
-1. **Composer.** Run `composer require makallio85/rocksoftware-cakephp-ui:^1.1`. Until the package
+1. **Composer.** Run `composer require makallio85/rocksoftware-cakephp-ui:^1.2`. Until the package
    is on Packagist, add the repository as a `vcs` entry under `repositories`.
 2. **Plugin.** Add `$this->addPlugin(\RockSoftware\Ui\UiPlugin::class);` to
    `Application::bootstrap()`.
@@ -121,9 +130,10 @@ Every setting has a default in `UiPlugin::DEFAULTS`.
 | `titleSuffix` | `null` | What follows the page title; null for ` · <appName>` |
 | `homeUrl` | `'/'` | Where the brand and the error page's back link go |
 | `storageKeyPrefix` | `'ui'` | Prefix of the browser storage keys that keep the menu's pin and collapsed groups |
-| `components` | all `false` | `['breadcrumb' => …, 'modal' => …, 'listTable' => …]` |
+| `components` | all `false` | `['breadcrumb' => …, 'modal' => …, 'listTable' => …, 'confirm' => …, 'toast' => …]` |
 | `elements` | `[]` | The application's own elements, by layout and place (below) |
 | `locale` | `null` | The language of the frame's texts when it differs from the application's |
+| `displayTimezone` | `'Europe/Helsinki'` | The time zone `Ui->date()` and `Ui->dateTime()` show moments in |
 
 In debug mode, the `default` and `auth` layouts prefix the title with `[DEV] `.
 
@@ -162,6 +172,170 @@ In debug mode, the `default` and `auth` layouts prefix the title with `[DEV] `.
 - **Breadcrumb**: with the component on, the `breadcrumb` view variable lists the pages from the
   top down, each `['title' => …, 'url' => array|string|null]`; the last is the page itself. On
   phones only the page above shows, as a back link.
+
+## Shared in-page pieces
+
+Everything here works without Vue or a build step and under a Content-Security-Policy of
+`script-src 'self'` (no inline script, no inline handlers). Their styles (`kk-components.css`)
+load on every layout. A template that uses the `Ui` helper before the layout runs loads it in
+`AppView::initialize()`:
+
+```php
+$this->addHelper('RockSoftware/Ui.Ui');
+```
+
+The test application's components page (`/components` in the sandbox) shows all of them.
+
+### Badges
+
+```php
+<?= $this->Ui->badge('Delivered', 'ok') ?>
+<?= $this->Ui->badge('Queued', 'pending', ['title' => 'Waiting for the gateway']) ?>
+```
+
+Tones: `ok`, `pending`, `danger`, `muted` (the default), `info`, `tag`
+(`UiHelper::BADGE_TONES`); any other throws. The application maps its own states to a tone. The
+markup is `<span class="kk-badge kk-badge-ok">`; the colours are set explicitly, as Bootstrap's
+`text-bg-*` does not render in this theme. Options: `title`, `class`, `escape`.
+
+### Page header
+
+```php
+<?= $this->element('ui/page_header', [
+    'title' => 'Messages',
+    'subtitle' => 'Everything sent in the last 90 days.',      // optional
+    'badges' => $this->Ui->badge('Live', 'ok'),                // optional markup beside the title
+    'actions' => [                                             // optional; or a string of markup
+        ['title' => 'New message', 'url' => ['action' => 'add'], 'icon' => 'bi bi-plus-lg', 'isPrimary' => true],
+        ['title' => 'Refresh', 'type' => 'button', 'attributes' => ['id' => 'refresh']],
+        ['title' => 'Purge', 'type' => 'post', 'url' => ['action' => 'purge'], 'confirm' => 'Purge every message?'],
+    ],
+    'menu' => [['title' => 'Export', 'url' => ['action' => 'export']]],   // optional kebab
+    'menuLabel' => 'More actions',                                        // optional
+]) ?>
+```
+
+An action is a link (`url`), a `post` (an asking `Ui->postButton()`, with `confirm`,
+`confirmTitle`, `confirmButton`, `confirmTone`, `data`, `method`) or a `button` for a script.
+On phones an action with an icon shows the icon alone (its title stays the accessible name).
+
+### Kebab menu
+
+The row's and the page's actions, in one `⋮` dropdown aligned right. Nothing renders when no
+item is left.
+
+```php
+<?= $this->element('ui/kebab', ['items' => [
+    ['type' => 'header', 'title' => 'View'],
+    ['type' => 'text', 'html' => $switchMarkup],               // e.g. a form-switch
+    ['title' => 'Edit', 'url' => ['action' => 'edit', $id], 'icon' => 'bi bi-pencil'],
+    ['title' => 'Resend', 'url' => ['action' => 'resend', $id], 'isDisabled' => true],
+    ['type' => 'divider'],
+    ['type' => 'post', 'title' => 'Delete', 'url' => ['action' => 'delete', $id],
+     'confirm' => 'Delete this message?', 'isDestructive' => true],
+], 'label' => 'Actions', 'size' => 'sm']) ?>
+```
+
+`size` is `sm` (the default, for a row) or `md`.
+
+### Confirmation before a destructive action
+
+```php
+<?= $this->Ui->postButton('Delete', ['action' => 'delete', $id], [
+    'class' => 'btn btn-outline-danger',
+    'confirm' => 'Messages already sent stay in the log. This cannot be undone.',
+    'confirmTitle' => 'Delete this provider?',   // default: Are you sure?
+    'confirmButton' => 'Delete',                 // default: Confirm
+    'confirmTone' => 'danger',                   // or primary
+]) ?>
+```
+
+This replaces `postLink(…, ['confirm' => …])` and `postButton(…, ['confirm' => …])`, whose
+prompt is an inline `onclick` that a strict policy refuses. The question goes into
+`data-confirm`, `data-confirm-title`, `data-confirm-button` and `data-confirm-tone`, and
+`kk-confirm.js` shows the dialog; the page loads it by itself. The form is `d-inline` unless
+`form.class` says otherwise. The same attributes work on any submit button, form or link the
+application writes itself (with the `confirm` component on). Only the button that submitted asks:
+a form with a Save and a Delete button asks for Delete only.
+
+From a script: `window.KkConfirm.ask({message, title, button, tone}).then((isConfirmed) => …)`.
+
+### Pagination
+
+```php
+<?= $this->element('ui/pagination') ?>
+<?= $this->element('ui/pagination', ['results' => $messages, 'modulus' => 6, 'showsCounter' => false]) ?>
+```
+
+"Showing 1–20 of 240" and the page links with Bootstrap 5 markup, separated squares, the current
+page in the accent colour; the edges and ellipses drop on phones. Nothing renders for an empty
+list, the counter alone for one page. The templates (`UiHelper::PAGINATOR_TEMPLATES`) apply to
+the element only; for the table's sort links too, load the paginator with them:
+
+```php
+$this->loadHelper('Paginator', ['templates' => \RockSoftware\Ui\View\Helper\UiHelper::PAGINATOR_TEMPLATES]);
+```
+
+### Toasts
+
+With the `toast` component on (or `$this->Ui->requireComponent('toast')` in one page's template):
+
+```js
+window.appBanner.success('Saved.');
+window.appBanner.error({ title: 'Could not send.', text: 'The gateway did not answer.' });
+window.appBanner.warning('Check the address.');
+window.appBanner.info('Refreshing…');
+window.appBanner('success', 'Saved.', 0);   // kind, message, ms until it closes (0 = until closed)
+```
+
+Top-right under the top bar on desktop, at the bottom on phones. Errors stay 6 s, the rest 3.5 s.
+The text is set as text, never as markup.
+
+### Empty state
+
+```php
+<?= $this->element('ui/empty_state', [
+    'title' => 'No messages yet',
+    'text' => 'Messages appear here once an application sends one.',   // optional
+    'icon' => 'bi bi-inbox',                                            // optional
+    'action' => $this->Html->link('New message', ['action' => 'add'], ['class' => 'btn btn-primary']),  // optional
+]) ?>
+```
+
+### Form help texts and validation
+
+An opt-in form helper, loaded as the application's `Form`:
+
+```php
+$this->addHelper('Form', ['className' => 'RockSoftware/Ui.Form']);
+```
+
+- `$this->Form->control('sender_name', ['help' => 'Shown to the recipient.'])` renders the text
+  under the field as `div.form-text` (escaped) and points `aria-describedby` at it.
+- A field with an error gets `is-invalid` and its message `.invalid-feedback`.
+- Required fields carry no inline `oninvalid` / `oninput` handlers (core's
+  `autoSetCustomValidity`, which a strict policy refuses); pass
+  `'autoSetCustomValidity' => true` to have them back.
+
+### Tab strips that scroll
+
+`<ul class="nav nav-tabs nav-tabs-scrollable">`: the tabs stay on one line and scroll sideways
+on a narrow screen.
+
+### Dates and numbers
+
+```php
+$this->Ui->date($value);                 // 26.10.2026
+$this->Ui->dateTime($value);             // 26.10.2026 08.14 (in the display time zone)
+$this->Ui->number(1842.3, 2);            // 1 842,30 in Finnish, 1,842.30 in English
+$this->Ui->money('1842.30');             // 1 842,30 € in Finnish, €1,842.30 in English
+$this->Ui->money(7000, 'USD', 0);
+```
+
+A calendar day (`Cake\I18n\Date`, a `YYYY-MM-DD` string) shows as it is; a moment
+(`DateTimeInterface`, an ISO string, a Unix timestamp) shows in the `displayTimezone` setting
+(default `Europe/Helsinki`). A missing or unreadable value shows `—`, or the last argument.
+Numbers follow the `locale` setting or the application's locale.
 
 ## Translations
 
