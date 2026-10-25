@@ -135,7 +135,9 @@ In debug mode, the `default` and `auth` layouts prefix the title with `[DEV] `.
   from `makallio85/rocksoftware-cakephp-users` (`UserMenu` helper) when it is loaded. An
   application without it sets the `userMenuItems` view variable in the same shape: entries of type
   `header` (`label`, `detail`), `app` (`label`, `url`, `current`), `link` (`label`, `url`) and
-  `sign_out` (`label`, `url`, posted). No entries, no user menu.
+  `sign_out` (`label`, `url`, posted by a plain form, no script). No entries, no user menu.
+- **Content-Security-Policy**: the frame renders no inline scripts, inline event handlers or
+  `javascript:` URLs, so it works under `script-src 'self'`.
 - **Breadcrumb**: with the component on, the `breadcrumb` view variable lists the pages from the
   top down, each `['title' => …, 'url' => array|string|null]`; the last is the page itself. On
   phones only the page above shows, as a back link.

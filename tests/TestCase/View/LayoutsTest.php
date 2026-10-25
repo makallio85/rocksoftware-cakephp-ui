@@ -122,6 +122,59 @@ class LayoutsTest extends TestCase
         $this->assertResponseContains('action="/sign-out"');
     }
 
+    public function testSignOutIsAFormPostWithoutScript(): void
+    {
+        Configure::write('TestApp.userMenuItems', [
+            ['type' => 'sign_out', 'label' => 'Sign out', 'url' => '/sign-out'],
+        ]);
+        $this->get('/');
+
+        $this->assertMatchesRegularExpression(
+            '#<form method="post"[^>]* class="m-0" action="/sign-out">.*?'
+            . '<button type="submit" class="dropdown-item d-flex align-items-center gap-2">'
+            . '<i class="bi bi-box-arrow-right text-secondary"></i>Sign out</button></form>#s',
+            $this->body(),
+        );
+        $this->assertResponseContains('name="_csrfToken"');
+    }
+
+    /**
+     * A strict Content-Security-Policy (`script-src 'self'`) blocks inline
+     * event handlers, `javascript:` URLs and inline scripts, so no layout
+     * may render them. JSON data blocks are not run and stay allowed.
+     *
+     * @return void
+     */
+    public function testNoLayoutRendersScriptAStrictContentSecurityPolicyBlocks(): void
+    {
+        Configure::write('TestApp.userMenuItems', [
+            ['type' => 'header', 'label' => 'Alex Example', 'detail' => 'alex@example.test'],
+            ['type' => 'app', 'label' => 'Demo App', 'url' => 'https://app.example.test/', 'current' => true],
+            ['type' => 'link', 'label' => 'Your account', 'url' => 'https://id.example.test/account'],
+            ['type' => 'sign_out', 'label' => 'Sign out', 'url' => '/sign-out'],
+        ]);
+        Configure::write('debug', false);
+        try {
+            foreach (['/', '/reports', '/dashboard/banner', '/dashboard/sign-in', '/dashboard/fragment', '/no-such-page'] as $url) {
+                $this->get($url);
+                $body = $this->body();
+
+                $this->assertDoesNotMatchRegularExpression('#<[^>]*\\son[a-z]+\\s*=#i', $body, $url . ' has an inline event handler');
+                $this->assertStringNotContainsStringIgnoringCase('javascript:', $body, $url . ' has a javascript: URL');
+                preg_match_all('#<script\\b([^>]*)>#i', $body, $scripts);
+                foreach ($scripts[1] as $attributes) {
+                    $this->assertMatchesRegularExpression(
+                        '#\\ssrc=|\\stype="application/(ld\\+)?json"#',
+                        $attributes,
+                        $url . ' has an inline script',
+                    );
+                }
+            }
+        } finally {
+            Configure::write('debug', true);
+        }
+    }
+
     public function testUserMenuIsLeftOutWithoutEntries(): void
     {
         $this->get('/');

@@ -69,10 +69,20 @@ $menuItems = $this->Ui->userMenuItems();
                 </li>
                     <?php elseif ($item['type'] === 'sign_out') : ?>
                 <li>
-                        <?= $this->Form->postLink(
+                        <?php
+                        // A real form with a submit button, not postLink(): postLink()
+                        // submits through an inline onclick, which a strict
+                        // Content-Security-Policy blocks.
+                        ?>
+                        <?= $this->Form->postButton(
                             '<i class="bi bi-box-arrow-right text-secondary"></i>' . h($item['label']),
                             $item['url'],
-                            ['class' => 'dropdown-item d-flex align-items-center gap-2', 'escapeTitle' => false],
+                            [
+                                'type' => 'submit',
+                                'class' => 'dropdown-item d-flex align-items-center gap-2',
+                                'escapeTitle' => false,
+                                'form' => ['class' => 'm-0'],
+                            ],
                         ) ?>
                 </li>
                     <?php endif; ?>
