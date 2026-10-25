@@ -1,0 +1,32 @@
+/* The confirmation dialog of the `confirm` component (js/components/kk-confirm.js). */
+dialog.kk-confirm {
+    width: min(420px, calc(100vw - 2rem));
+    padding: 0;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    background: #fff;
+    color: #212529;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, .14);
+}
+dialog.kk-confirm::backdrop { background: rgba(15, 23, 42, .35); }
+.kk-confirm-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f3f5;
+    font-weight: 600;
+}
+.kk-confirm-body {
+    padding: 14px 16px;
+    font-size: .875rem;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+}
+.kk-confirm-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid #f1f3f5;
+}
+@media (max-width: 575.98px) {
+    .kk-confirm-footer .btn { flex: 1 1 0; min-height: 44px; }
+}

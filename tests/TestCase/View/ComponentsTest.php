@@ -46,7 +46,67 @@ class ComponentsTest extends TestCase
         $this->assertResponseNotContains('kk-list-table');
         $this->assertResponseNotContains('kk-breadcrumb');
         $this->assertResponseNotContains('kk-ui-texts');
+        $this->assertResponseNotContains('kk-confirm');
+        $this->assertResponseNotContains('kk-toast');
         $this->assertResponseContains('class="kk-brand"');
+    }
+
+    public function testSharedPiecesStylesLoadOnEveryLayout(): void
+    {
+        $this->useComponents([]);
+        $this->get('/');
+        $this->assertResponseContains('/rock_software/ui/css/kk-components.css');
+
+        $this->get('/dashboard/sign-in');
+        $this->assertResponseContains('/rock_software/ui/css/kk-components.css');
+    }
+
+    public function testConfirmLoadsItsStyleScriptAndTexts(): void
+    {
+        $this->useComponents(['confirm' => true]);
+        $this->get('/');
+
+        $this->assertResponseContains('/rock_software/ui/css/kk-confirm.css');
+        $this->assertResponseContains('/rock_software/ui/js/components/kk-confirm.js');
+        $this->assertResponseContains('"confirmTitle":"Are you sure?"');
+        $this->assertResponseContains('"confirmButton":"Confirm"');
+        $this->assertResponseContains('"confirmCancel":"Cancel"');
+        $this->assertResponseNotContains('kk-toast');
+    }
+
+    public function testToastLoadsItsStyleScriptAndTexts(): void
+    {
+        $this->useComponents(['toast' => true]);
+        $this->get('/');
+
+        $this->assertResponseContains('/rock_software/ui/css/kk-toast.css');
+        $this->assertResponseContains('/rock_software/ui/js/components/kk-toast.js');
+        $this->assertResponseContains('"toastClose":"Close"');
+        $this->assertResponseNotContains('kk-confirm');
+    }
+
+    public function testConfirmAndToastTextsInFinnish(): void
+    {
+        I18n::setLocale('fi_FI');
+        $this->useComponents(['confirm' => true, 'toast' => true]);
+        $this->get('/');
+
+        $this->assertResponseContains('"confirmTitle":"Oletko varma?"');
+        $this->assertResponseContains('"confirmButton":"Vahvista"');
+        $this->assertResponseContains('"confirmCancel":"Peruuta"');
+        $this->assertResponseContains('"toastClose":"Sulje"');
+    }
+
+    public function testAPageWithAnAskingPostButtonLoadsConfirmItself(): void
+    {
+        $this->useComponents([]);
+        $this->get('/components');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('/rock_software/ui/js/components/kk-confirm.js');
+        $this->assertResponseContains('/rock_software/ui/css/kk-confirm.css');
+        // The page asks for the toasts in its template.
+        $this->assertResponseContains('/rock_software/ui/js/components/kk-toast.js');
     }
 
     public function testModalLoadsItsStyleScriptsAndTexts(): void

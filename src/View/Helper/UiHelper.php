@@ -3,37 +3,115 @@ declare(strict_types=1);
 
 namespace RockSoftware\Ui\View\Helper;
 
+use Cake\Chronos\ChronosDate;
 use Cake\Core\Configure;
 use Cake\Core\Plugin;
+use Cake\I18n\DateTime;
 use Cake\I18n\I18n;
 use Cake\View\Helper;
+use DateTimeInterface;
+use InvalidArgumentException;
+use NumberFormatter;
 use RockSoftware\Ui\UiPlugin;
 use RockSoftware\Ui\View\MainMenuInterface;
+use Throwable;
 
 /**
  * What the frame's layouts and elements read: the application's settings
- * (`UiPlugin::DEFAULTS`), its main menu and the user menu. The layouts load
- * it themselves; an application does not need to.
+ * (`UiPlugin::DEFAULTS`), its main menu and the user menu; and the shared
+ * in-page pieces a template uses: badges (`badge()`), a post button that asks
+ * first (`postButton()`), the paginator's templates and the date and number
+ * formats (`date()`, `dateTime()`, `number()`, `money()`). The layouts load
+ * it themselves; a template that uses it before the layout runs loads it in
+ * the application's `AppView` (`$this->addHelper('RockSoftware/Ui.Ui')`).
  *
+ * @property \Cake\View\Helper\FormHelper $Form
  * @extends \Cake\View\Helper<\Cake\View\View>
  */
 class UiHelper extends Helper
 {
+    /**
+     * The tones a badge comes in. The application maps its own states to
+     * them; the plugin knows no state.
+     *
+     * @var list<string>
+     */
+    public const BADGE_TONES = ['ok', 'pending', 'danger', 'muted', 'info', 'tag'];
+
+    /**
+     * Bootstrap 5 templates for CakePHP's `PaginatorHelper`: page links as
+     * `.page-item` / `.page-link`, disabled ones as plain text (no inline
+     * script), sort links with a caret. The `ui/pagination` element uses
+     * them; an application sets them for its own sort links with
+     * `$this->loadHelper('Paginator', ['templates' => UiHelper::PAGINATOR_TEMPLATES])`.
+     *
+     * @var array<string, string>
+     */
+    public const PAGINATOR_TEMPLATES = [
+        'nextActive' => '<li class="page-item"><a class="page-link" rel="next" href="{{url}}">{{text}}</a></li>',
+        'nextDisabled' => '<li class="page-item disabled"><span class="page-link">{{text}}</span></li>',
+        'prevActive' => '<li class="page-item"><a class="page-link" rel="prev" href="{{url}}">{{text}}</a></li>',
+        'prevDisabled' => '<li class="page-item disabled"><span class="page-link">{{text}}</span></li>',
+        'counterRange' => '{{start}}–{{end}} / {{count}}',
+        'counterPages' => '{{page}} / {{pages}}',
+        'first' => '<li class="page-item kk-page-edge"><a class="page-link" href="{{url}}">{{text}}</a></li>',
+        'last' => '<li class="page-item kk-page-edge"><a class="page-link" href="{{url}}">{{text}}</a></li>',
+        'number' => '<li class="page-item"><a class="page-link" href="{{url}}">{{text}}</a></li>',
+        'current' => '<li class="page-item active" aria-current="page"><span class="page-link">{{text}}</span></li>',
+        'ellipsis' => '<li class="page-item disabled kk-page-edge"><span class="page-link">&hellip;</span></li>',
+        'sort' => '<a class="kk-sort" href="{{url}}">{{text}}</a>',
+        'sortAsc' => '<a class="kk-sort asc" href="{{url}}">{{text}}'
+            . '<i class="bi bi-caret-up-fill" aria-hidden="true"></i></a>',
+        'sortDesc' => '<a class="kk-sort desc" href="{{url}}">{{text}}'
+            . '<i class="bi bi-caret-down-fill" aria-hidden="true"></i></a>',
+        'sortAscLocked' => '<a class="kk-sort asc locked" href="{{url}}">{{text}}'
+            . '<i class="bi bi-caret-up-fill" aria-hidden="true"></i></a>',
+        'sortDescLocked' => '<a class="kk-sort desc locked" href="{{url}}">{{text}}'
+            . '<i class="bi bi-caret-down-fill" aria-hidden="true"></i></a>',
+    ];
+
+    /** A day as shown: DD.MM.YYYY. */
+    public const DATE_FORMAT = 'd.m.Y';
+
+    /** A moment as shown: DD.MM.YYYY HH.mm. */
+    public const DATE_TIME_FORMAT = 'd.m.Y H.i';
+
     /** The styles every layout loads, from the plugin's webroot. */
-    private const BASE_CSS = ['bootstrap.min', 'bootstrap-icons.min', 'app-chrome'];
+    private const BASE_CSS = ['bootstrap.min', 'bootstrap-icons.min', 'app-chrome', 'kk-components'];
 
     /** The styles of each optional component. */
     private const COMPONENT_CSS = [
         'breadcrumb' => ['kk-breadcrumb'],
         'modal' => ['kk-modal'],
         'listTable' => ['kk-list-table'],
+        'confirm' => ['kk-confirm'],
+        'toast' => ['kk-toast'],
     ];
 
     /** The scripts of each optional component, after Bootstrap and the chrome. */
     private const COMPONENT_SCRIPTS = [
         'modal' => ['components/kk-modal', 'components/kk-modal-markup'],
         'listTable' => ['components/kk-list-table'],
+        'confirm' => ['components/kk-confirm'],
+        'toast' => ['components/kk-toast'],
     ];
+
+    /** A day without a time: YYYY-MM-DD. */
+    private const DATE_ONLY = '/^\d{4}-\d{2}-\d{2}$/';
+
+    /**
+     * @var array<array-key, array<string, mixed>|string>
+     */
+    protected array $helpers = ['Form'];
+
+    /**
+     * The components a template on this page needs although the application
+     * did not switch them on, such as `confirm` for a `postButton()` that
+     * asks first. The layout, rendered after the template, loads them.
+     *
+     * @var array<string, true>
+     */
+    private array $requiredComponents = [];
 
     /**
      * @return string
@@ -135,7 +213,20 @@ class UiHelper extends Helper
     {
         $components = (array)UiPlugin::setting('components');
 
-        return ($components[$component] ?? false) === true;
+        return ($components[$component] ?? false) === true || isset($this->requiredComponents[$component]);
+    }
+
+    /**
+     * Loads an optional component on this page, whatever the setting: a
+     * template that renders something needing it calls this before the
+     * layout runs.
+     *
+     * @param string $component A key of `UiPlugin::DEFAULTS['components']`.
+     * @return void
+     */
+    public function requireComponent(string $component): void
+    {
+        $this->requiredComponents[$component] = true;
     }
 
     /**
@@ -209,8 +300,235 @@ class UiHelper extends Helper
                 'locale' => $this->htmlLang(),
             ];
         }
+        if ($this->isEnabled('confirm')) {
+            $texts += [
+                'confirmTitle' => __d('rock_software_ui', 'Are you sure?'),
+                'confirmButton' => __d('rock_software_ui', 'Confirm'),
+                'confirmCancel' => __d('rock_software_ui', 'Cancel'),
+            ];
+        }
+        if ($this->isEnabled('toast')) {
+            $texts += [
+                'toastClose' => __d('rock_software_ui', 'Close'),
+            ];
+        }
 
         return $texts;
+    }
+
+    /**
+     * A badge: a short status or label in one of `BADGE_TONES`, with its
+     * colours set by the plugin (`.kk-badge-<tone>`).
+     *
+     * Options: `title` (a tooltip), `class` (more classes), `escape` (false
+     * when `$text` is markup already escaped).
+     *
+     * @param string $text What the badge says.
+     * @param string $tone `ok`, `pending`, `danger`, `muted`, `info` or `tag`.
+     * @param array<string, mixed> $options See above.
+     * @return string
+     * @throws \InvalidArgumentException For a tone not in `BADGE_TONES`.
+     */
+    public function badge(string $text, string $tone = 'muted', array $options = []): string
+    {
+        if (!in_array($tone, self::BADGE_TONES, true)) {
+            throw new InvalidArgumentException(sprintf(
+                'Unknown badge tone "%s"; use one of %s.',
+                $tone,
+                implode(', ', self::BADGE_TONES),
+            ));
+        }
+        $class = trim('kk-badge kk-badge-' . $tone . ' ' . (string)($options['class'] ?? ''));
+        $title = isset($options['title']) ? ' title="' . h((string)$options['title']) . '"' : '';
+        $content = ($options['escape'] ?? true) === false ? $text : h($text);
+
+        return '<span class="' . h($class) . '"' . $title . '>' . $content . '</span>';
+    }
+
+    /**
+     * `FormHelper::postButton()` that asks before it posts, without inline
+     * script: the message goes into `data-confirm` and the `confirm`
+     * component's script shows the dialog. Rendering one loads that
+     * component on the page.
+     *
+     * Options besides those of `postButton()`:
+     * - `confirm`: the question; without one the button posts at once;
+     * - `confirmTitle`: the dialog's heading (default: Are you sure?);
+     * - `confirmButton`: the label of the button that goes ahead (default: Confirm);
+     * - `confirmTone`: `danger` (the default) or `primary`.
+     * The form is inline (`d-inline`) unless `form.class` says otherwise.
+     *
+     * @param string $title The button's text, escaped unless `escapeTitle` is false.
+     * @param array<string, mixed>|string $url Where the form posts.
+     * @param array<string, mixed> $options See above.
+     * @return string
+     */
+    public function postButton(string $title, array|string $url, array $options = []): string
+    {
+        $attributes = [
+            'confirm' => 'data-confirm',
+            'confirmTitle' => 'data-confirm-title',
+            'confirmButton' => 'data-confirm-button',
+            'confirmTone' => 'data-confirm-tone',
+        ];
+        $isConfirmed = isset($options['confirm']) && (string)$options['confirm'] !== '';
+        foreach ($attributes as $option => $attribute) {
+            if ($isConfirmed && isset($options[$option]) && (string)$options[$option] !== '') {
+                $options[$attribute] = (string)$options[$option];
+            }
+            unset($options[$option]);
+        }
+        $form = isset($options['form']) && is_array($options['form']) ? $options['form'] : [];
+        $form += ['class' => 'd-inline'];
+        $options['form'] = $form;
+        $options += ['type' => 'submit'];
+        if ($isConfirmed) {
+            $this->requireComponent('confirm');
+        }
+
+        return $this->Form->postButton($title, $url, $options);
+    }
+
+    /**
+     * A day as DD.MM.YYYY. A calendar day (a `Date`, a `YYYY-MM-DD` string)
+     * shows as it is; a moment shows as its day in the display time zone.
+     *
+     * @param \DateTimeInterface|\Cake\Chronos\ChronosDate|string|int|null $value The day or moment.
+     * @param string $empty What a missing or unreadable value shows.
+     * @return string
+     */
+    public function date(DateTimeInterface|ChronosDate|string|int|null $value, string $empty = '—'): string
+    {
+        if ($value instanceof ChronosDate) {
+            return $value->format(self::DATE_FORMAT);
+        }
+        if (is_string($value) && preg_match(self::DATE_ONLY, $value) === 1) {
+            [$year, $month, $day] = explode('-', $value);
+
+            return $day . '.' . $month . '.' . $year;
+        }
+        $moment = $this->moment($value);
+
+        return $moment === null ? $empty : $moment->format(self::DATE_FORMAT);
+    }
+
+    /**
+     * A moment as DD.MM.YYYY HH.mm in the display time zone (the
+     * `displayTimezone` setting). A string without a zone is read in PHP's
+     * default zone, as the database layer reads it.
+     *
+     * @param \DateTimeInterface|\Cake\Chronos\ChronosDate|string|int|null $value The moment (an int is a Unix timestamp).
+     * @param string $empty What a missing or unreadable value shows.
+     * @return string
+     */
+    public function dateTime(DateTimeInterface|ChronosDate|string|int|null $value, string $empty = '—'): string
+    {
+        if ($value instanceof ChronosDate) {
+            return $value->format(self::DATE_FORMAT);
+        }
+        $moment = $this->moment($value);
+
+        return $moment === null ? $empty : $moment->format(self::DATE_TIME_FORMAT);
+    }
+
+    /**
+     * A number in the language of the page: `1 842,30` in Finnish,
+     * `1,842.30` in English.
+     *
+     * @param string|float|int|null $value A number or a decimal string (`'1842.30'`).
+     * @param int $decimals Digits after the decimal separator.
+     * @param string $empty What a missing or unreadable value shows.
+     * @return string
+     */
+    public function number(string|int|float|null $value, int $decimals = 0, string $empty = '—'): string
+    {
+        if ($value === null || $value === '' || !is_numeric($value)) {
+            return $empty;
+        }
+        $formatter = new NumberFormatter($this->numberLocale(), NumberFormatter::DECIMAL);
+        $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, $decimals);
+        $formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $decimals);
+        $formatter->setAttribute(NumberFormatter::ROUNDING_MODE, NumberFormatter::ROUND_HALFUP);
+        $text = $formatter->format((float)$value);
+
+        return $text === false ? $empty : $text;
+    }
+
+    /**
+     * An amount of money in the language of the page: `1 842,30 €` in
+     * Finnish, `€1,842.30` in English.
+     *
+     * @param string|float|int|null $value The amount in the currency's units (`'1842.30'`, not cents).
+     * @param string $currency ISO 4217 code.
+     * @param int|null $decimals Digits after the separator; null takes the currency's own (2 for EUR).
+     * @param string $empty What a missing or unreadable value shows.
+     * @return string
+     */
+    public function money(
+        string|int|float|null $value,
+        string $currency = 'EUR',
+        ?int $decimals = null,
+        string $empty = '—',
+    ): string {
+        if ($value === null || $value === '' || !is_numeric($value)) {
+            return $empty;
+        }
+        $formatter = new NumberFormatter($this->numberLocale(), NumberFormatter::CURRENCY);
+        if ($decimals !== null) {
+            $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, $decimals);
+            $formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $decimals);
+        }
+        $formatter->setAttribute(NumberFormatter::ROUNDING_MODE, NumberFormatter::ROUND_HALFUP);
+        $text = $formatter->formatCurrency((float)$value, strtoupper($currency));
+
+        return $text === false ? $empty : $text;
+    }
+
+    /**
+     * The display time zone: the `displayTimezone` setting.
+     *
+     * @return string
+     */
+    public function displayTimezone(): string
+    {
+        $zone = UiPlugin::setting('displayTimezone');
+
+        return is_string($zone) && $zone !== '' ? $zone : 'Europe/Helsinki';
+    }
+
+    /**
+     * A value as a moment in the display time zone; null when there is none.
+     *
+     * @param \DateTimeInterface|string|int|null $value The moment.
+     * @return \Cake\I18n\DateTime|null
+     */
+    private function moment(DateTimeInterface|string|int|null $value): ?DateTime
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        try {
+            $moment = is_int($value) ? DateTime::createFromTimestamp($value) : DateTime::parse($value);
+        } catch (Throwable) {
+            return null;
+        }
+
+        return $moment->setTimezone($this->displayTimezone());
+    }
+
+    /**
+     * The ICU locale numbers are written in: the `locale` setting or the
+     * application's locale. ICU's `en_US_POSIX`, a server's default, groups
+     * no thousands, so it counts as `en_US`.
+     *
+     * @return string
+     */
+    private function numberLocale(): string
+    {
+        $fixed = UiPlugin::setting('locale');
+        $locale = is_string($fixed) && $fixed !== '' ? $fixed : I18n::getLocale();
+
+        return (string)preg_replace('/_POSIX$/i', '', $locale);
     }
 
     /**

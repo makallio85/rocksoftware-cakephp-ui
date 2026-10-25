@@ -1,0 +1,155 @@
+/*
+ * The shared in-page pieces, loaded by every layout: badges, the page header,
+ * the kebab, the empty state, the pagination bar and scrolling tab strips.
+ * Colours are set explicitly: Bootstrap's text-bg-* helpers do not render in
+ * this theme.
+ */
+
+/* ------------------------------------------------------------------ badges */
+.kk-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+.kk-badge-ok      { background: #d1e7dd; color: #0a3622; }
+.kk-badge-pending { background: #fff3cd; color: #664d03; }
+.kk-badge-danger  { background: #f8d7da; color: #58151c; }
+.kk-badge-muted   { background: #e9ecef; color: #495057; }
+.kk-badge-info    { background: #cfe2ff; color: #052c65; }
+.kk-badge-tag     { background: #eef2ff; color: #3730a3; }
+
+/* ------------------------------------------------------------- page header */
+.kk-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: .5rem;
+    margin-bottom: 1rem;
+}
+.kk-page-header-text { flex: 1 1 auto; min-width: 0; }
+.kk-page-header-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+.kk-page-header-subtitle {
+    margin: 2px 0 0;
+    font-size: .8125rem;
+    color: #6c757d;
+}
+.kk-page-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+}
+.kk-page-header-actions > form { margin: 0; }
+.kk-page-header-actions .btn { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ------------------------------------------------------------------- kebab */
+.kk-kebab { display: inline-block; }
+.kk-kebab-toggle { display: inline-flex; align-items: center; justify-content: center; }
+.kk-kebab .dropdown-menu form { margin: 0; }
+.kk-kebab .dropdown-menu button.dropdown-item { width: 100%; text-align: start; }
+
+/* ------------------------------------------------------------- empty state */
+.kk-empty-state {
+    padding: 1.25rem .5rem;
+    border: 1px dashed #ced4da;
+    border-radius: 8px;
+    color: #6c757d;
+    text-align: center;
+}
+.kk-empty-state-icon {
+    display: block;
+    margin-bottom: .25rem;
+    font-size: 1.75rem;
+    color: #adb5bd;
+}
+.kk-empty-state-title { font-weight: 600; color: #343a40; }
+.kk-empty-state-text { font-size: .8125rem; }
+.kk-empty-state-action { margin-top: .75rem; }
+
+/* -------------------------------------------------------------- pagination */
+.kk-pagination-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+}
+.kk-pagination-counter { font-size: .8125rem; color: #6c757d; }
+.kk-pagination-bar > nav { margin-left: auto; }
+.kk-pagination { flex-wrap: wrap; gap: 4px; margin: 0; }
+.kk-pagination .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    margin: 0 !important;
+    border: 1px solid #dee2e6;
+    border-radius: 6px !important;
+    background: #fff;
+    color: var(--kk-accent, #4f46e5);
+    font-size: .875rem;
+}
+.kk-pagination .page-link:hover { background: var(--kk-accent-tint, #eef2ff); color: var(--kk-accent, #4f46e5); }
+.kk-pagination .page-link:focus-visible { box-shadow: 0 0 0 .2rem var(--kk-accent-soft, rgba(99, 102, 241, .16)); }
+.kk-pagination .page-item.active .page-link {
+    background: var(--kk-accent, #4f46e5);
+    border-color: var(--kk-accent, #4f46e5);
+    color: #fff;
+}
+.kk-pagination .page-item.disabled .page-link { background: #fff; color: #adb5bd; }
+
+/* Sort links in a table header. */
+a.kk-sort { color: inherit; text-decoration: none; }
+a.kk-sort.asc, a.kk-sort.desc { color: var(--kk-accent, #4f46e5); }
+a.kk-sort i { margin-left: .25rem; font-size: .7em; }
+
+/* ------------------------------------------------- tab strips that scroll */
+/* Tab headers scroll sideways rather than wrap. */
+.nav-tabs-scrollable {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.nav-tabs-scrollable::-webkit-scrollbar { display: none; }
+.nav-tabs-scrollable > .nav-item,
+.nav-tabs-scrollable > .nav-link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ phones */
+@media (max-width: 575.98px) {
+    .kk-page-header { flex-wrap: nowrap; align-items: flex-start; }
+    .kk-page-header-actions { flex-wrap: nowrap; }
+    .kk-page-header-actions .btn { min-width: 44px; min-height: 44px; justify-content: center; }
+    .kk-page-header-label { display: none; }
+    .kk-pagination-bar { justify-content: center; }
+    .kk-pagination-counter { width: 100%; text-align: center; }
+    .kk-pagination-bar > nav { margin-left: 0; }
+    .kk-pagination { justify-content: center; }
+    .kk-pagination .page-link { min-width: 40px; height: 44px; }
+    /* Phones drop the ellipses and the first and last page beyond them. */
+    .kk-pagination .kk-page-edge,
+    .kk-pagination .active ~ .kk-page-edge + .page-item:not(:last-child),
+    .kk-pagination .page-item:not(:first-child):has(+ .kk-page-edge ~ .active) { display: none; }
+}
