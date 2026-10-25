@@ -15,8 +15,8 @@ frame and none keeps its own copy.
 
 ## What the frame is
 
-- **`default` layout** (signed in): a fixed white top bar with the hamburger, the brand and the
-  user menu; an off-canvas drawer with the main menu (hover flyouts on desktop, an accordion on
+- **`default` layout** (signed in): a fixed white top bar with the hamburger, the brand, the
+  application's own controls and the user menu; an off-canvas drawer with the main menu (hover flyouts on desktop, an accordion on
   phones, a pin that docks it open); an optional banner under the top bar; the page content.
 - **`auth` layout**: a centred card with the brand mark and the application's name, for sign-in
   pages.
@@ -38,7 +38,7 @@ frame and none keeps its own copy.
 
 ## Installing in an application
 
-1. **Composer.** Run `composer require makallio85/rocksoftware-cakephp-ui:^1.0`. Until the package
+1. **Composer.** Run `composer require makallio85/rocksoftware-cakephp-ui:^1.1`. Until the package
    is on Packagist, add the repository as a `vcs` entry under `repositories`.
 2. **Plugin.** Add `$this->addPlugin(\RockSoftware\Ui\UiPlugin::class);` to
    `Application::bootstrap()`.
@@ -95,6 +95,18 @@ frame and none keeps its own copy.
    An item is active when the request's controller and plugin are its URL's. `badgeCounts()`
    returns the count of each badge key; a badge shows when its count is above zero.
 
+   A group with a `url` and no `items` is one direct link: it has the group's look (icon and
+   title), no caret and no flyout or accordion, and it is active the way an item is. Use it for a
+   menu entry that would otherwise be a group of one:
+
+   ```php
+   [
+       'title' => 'Dashboard',
+       'icon' => 'bi bi-house',
+       'url' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
+   ]
+   ```
+
 ### Settings
 
 Every setting has a default in `UiPlugin::DEFAULTS`.
@@ -124,13 +136,22 @@ In debug mode, the `default` and `auth` layouts prefix the title with `[DEV] `.
 
   ```php
   'elements' => [
-      'default' => ['head' => ['vite_css'], 'banner' => ['maintenance_notice'], 'bodyEnd' => ['vite_js']],
+      'default' => [
+          'head' => ['vite_css'],
+          'topbarEnd' => ['workspace_switcher'],
+          'banner' => ['maintenance_notice'],
+          'bodyEnd' => ['vite_js'],
+      ],
       'auth' => ['head' => ['vite_css'], 'bodyEnd' => ['vite_js']],
   ],
   ```
 
-  `head` renders after the frame's styles and before the `meta` and `css` blocks; `banner` under
-  the top bar (`default` only); `bodyEnd` after the frame's scripts and before the `script` block.
+  `head` renders after the frame's styles and before the `meta` and `css` blocks; `topbarEnd` in
+  the top bar, right-aligned just before the user menu (`default` only), for a small control
+  such as a switcher; `banner` under the top bar (`default` only); `bodyEnd` after the frame's
+  scripts and before the `script` block. The top bar keeps one line: on a narrow screen the
+  `topbarEnd` content shrinks and is clipped rather than wrapped, so keep it compact there (hide
+  labels below 576px, let a `form-select` shrink).
 - **User menu**: the signed-in person, the other applications, the account link and sign-out come
   from `makallio85/rocksoftware-cakephp-users` (`UserMenu` helper) when it is loaded. An
   application without it sets the `userMenuItems` view variable in the same shape: entries of type

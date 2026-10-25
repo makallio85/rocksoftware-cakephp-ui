@@ -24,6 +24,7 @@ Configure::write('Ui', [
     'brandIcon' => 'bi bi-rocket',
     'organizationName' => 'Example Ltd',
     'storageKeyPrefix' => 'demo',
+    'elements' => ['default' => ['topbarEnd' => ['demo_topbar_end']]],
 ]);
 UiPlugin::applyDefaults();
 Configure::write('TestApp', [

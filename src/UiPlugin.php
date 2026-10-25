@@ -46,7 +46,8 @@ class UiPlugin extends BasePlugin
      *   `listTable` (`window.KkListTable`).
      * - `elements`: the application's own elements the layouts render, by
      *   layout (`default`, `auth`, `error`) and place: `head` (after the
-     *   frame's styles), `banner` (under the top bar, `default` only) and
+     *   frame's styles), `topbarEnd` (in the top bar before the user menu,
+     *   `default` only), `banner` (under the top bar, `default` only) and
      *   `bodyEnd` (after the frame's scripts, before the `script` block).
      * - `locale`: the language of the frame's texts when it differs from the
      *   application's locale (e.g. `fi`); null follows the application.

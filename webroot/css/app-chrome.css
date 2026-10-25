@@ -68,10 +68,28 @@
 
 .kk-topbar-right {
     margin-left: auto;
+    min-width: 0;
     display: flex;
     align-items: center;
     gap: .15rem;
 }
+
+/* The application's own controls before the user menu (`Ui.elements` place
+   `topbarEnd`). The bar keeps its height: on a narrow screen the controls
+   shrink and clip rather than wrap onto a second line. */
+.kk-topbar-end {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-right: .35rem;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.kk-topbar-end > * { min-width: 0; flex-wrap: nowrap; }
+.kk-topbar-end .form-select { min-width: 0; max-width: 100%; text-overflow: ellipsis; }
+.kk-topbar > .kk-hamburger,
+.kk-topbar > .kk-brand { flex-shrink: 0; }
 
 /* --------------------------------------------------------------- user menu */
 .kk-user-btn {
@@ -194,6 +212,14 @@
     transition: transform .15s ease;
 }
 
+/* a group that is one direct link */
+.kk-nav a.group-btn { text-decoration: none; }
+.kk-nav a.group-btn.active {
+    background: var(--kk-accent-tint);
+    color: var(--kk-accent);
+}
+.kk-nav a.group-btn.active .group-icon { color: var(--kk-accent); }
+
 /* sub-items */
 .kk-nav .sub {
     display: flex;
@@ -289,6 +315,12 @@
     }
     .kk-nav .kk-group:hover > .group-btn .group-icon,
     .kk-nav .kk-group:focus-within > .group-btn .group-icon { color: var(--kk-accent); }
+
+    .kk-nav .kk-group:hover > a.group-btn.active,
+    .kk-nav .kk-group:focus-within > a.group-btn.active {
+        background: var(--kk-accent-tint);
+        color: var(--kk-accent);
+    }
 
     .kk-nav .kk-group:hover > .sub,
     .kk-nav .kk-group:focus-within > .sub { display: flex; }

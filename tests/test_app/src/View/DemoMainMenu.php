@@ -27,11 +27,9 @@ final class DemoMainMenu implements MainMenuInterface
     {
         return [
             [
-                'title' => 'Home',
+                'title' => 'Dashboard',
                 'icon' => 'bi bi-house',
-                'items' => [
-                    ['title' => 'Dashboard', 'url' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index']],
-                ],
+                'url' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
             ],
             [
                 'title' => 'Work',
@@ -44,6 +42,13 @@ final class DemoMainMenu implements MainMenuInterface
                         'badgeLabel' => 'waiting for review',
                     ],
                     ['title' => 'Archive', 'url' => ['plugin' => null, 'controller' => 'Archive', 'action' => 'index']],
+                ],
+            ],
+            [
+                'title' => 'Settings',
+                'icon' => 'bi bi-gear',
+                'items' => [
+                    ['title' => 'Preferences', 'url' => ['plugin' => null, 'controller' => 'Preferences', 'action' => 'index']],
                 ],
             ],
         ];

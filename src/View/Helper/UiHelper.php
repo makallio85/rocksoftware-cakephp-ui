@@ -217,7 +217,7 @@ class UiHelper extends Helper
      * Renders the application's elements configured for one place of a layout.
      *
      * @param string $layout `default`, `auth` or `error`.
-     * @param string $place `head`, `banner` or `bodyEnd`.
+     * @param string $place `head`, `topbarEnd`, `banner` or `bodyEnd`.
      * @return string
      */
     public function elements(string $layout, string $place): string
@@ -235,13 +235,24 @@ class UiHelper extends Helper
     /**
      * The main menu's groups; none without a `mainMenu` view variable.
      *
-     * @return array<int, array{title: string, icon: string, items: array<int, array{title: string, url: array<string, mixed>, badge?: string, badgeLabel?: string}>}>
+     * @return array<int, array{title: string, icon: string, url?: array<string, mixed>, items?: array<int, array{title: string, url: array<string, mixed>, badge?: string, badgeLabel?: string}>}>
      */
     public function menuGroups(): array
     {
         $menu = $this->getView()->get('mainMenu');
 
         return $menu instanceof MainMenuInterface ? $menu->groups() : [];
+    }
+
+    /**
+     * Whether a menu group is one direct link: it has a `url` and no items.
+     *
+     * @param array<string, mixed> $group A menu group.
+     * @return bool
+     */
+    public function isLinkGroup(array $group): bool
+    {
+        return isset($group['url']) && empty($group['items']);
     }
 
     /**
@@ -262,10 +273,10 @@ class UiHelper extends Helper
     }
 
     /**
-     * Whether a menu item is the page being shown: its URL's controller and
-     * plugin are the request's.
+     * Whether a menu item, or a group that is one link, is the page being
+     * shown: its URL's controller and plugin are the request's.
      *
-     * @param array<string, mixed> $item A menu item.
+     * @param array<string, mixed> $item A menu item or link group.
      * @return bool
      */
     public function isActive(array $item): bool
