@@ -1,0 +1,137 @@
+/*
+ * <kk-modal> (js/components/kk-modal.js), an optional component. The measurements are
+ * Bootstrap 5.1's modal, so a screen keeps its look when it moves to it.
+ */
+.kk-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 1.75rem .5rem;
+    background: rgba(0, 0, 0, .5);
+    overflow: hidden;
+    animation: kk-modal-fade .15s linear;
+}
+
+@keyframes kk-modal-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.kk-modal-dialog {
+    position: relative;
+    width: 500px;
+    max-width: 100%;
+    max-height: 100%;
+    display: flex;
+    outline: 0;
+    transition: scale .15s ease-out;
+}
+
+.kk-modal-sm { width: 300px; }
+.kk-modal-lg { width: 800px; }
+.kk-modal-xl { width: 1140px; }
+
+.kk-modal-refused .kk-modal-dialog { scale: 1.02; }
+
+.kk-modal-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    background: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, .2);
+    border-radius: .3rem;
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+    color: #212529;
+    /* Resizable from the bottom-right corner; the body scrolls inside. */
+    resize: both;
+    overflow: hidden;
+    min-height: 200px;
+    max-height: calc(100vh - 3.5rem);
+}
+
+.kk-modal-header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: .25rem;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.kk-modal-title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.kk-modal-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 .35rem;
+    border: 0;
+    background: transparent;
+    color: #6c757d;
+    cursor: grab;
+    user-select: none;
+}
+
+.kk-modal-handle:hover { color: #212529; }
+.kk-modal-handle:active { cursor: grabbing; }
+
+.kk-modal-header .btn-close { margin: -.5rem -.5rem -.5rem 0; padding: .5rem; }
+
+.kk-modal-tabs {
+    flex-shrink: 0;
+    padding: .75rem 1rem 0;
+}
+
+.kk-modal-tabs > .nav { margin-bottom: 0; }
+
+.kk-modal-body {
+    flex: 1 1 auto;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.kk-modal-footer {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .5rem;
+    padding: .75rem;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Phone and touch: the whole screen, the footer pinned at the bottom. */
+.kk-modal-phone { padding: 0; }
+
+.kk-modal-phone .kk-modal-dialog {
+    width: 100%;
+    height: 100%;
+}
+
+.kk-modal-phone .kk-modal-content {
+    resize: none;
+    border: 0;
+    border-radius: 0;
+    max-height: none;
+    height: 100%;
+}
+
+.kk-modal-phone .kk-modal-footer > .btn { flex: 1 1 0; min-height: 44px; }
+
+.kk-modal-phone .kk-modal-header .btn-close { width: 44px; height: 44px; margin: -.75rem -.5rem -.75rem 0; }
+
+@media (max-width: 991.98px), (pointer: coarse) {
+    body.kk-modal-open #app-scroll { overflow: hidden; }
+}

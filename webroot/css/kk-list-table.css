@@ -1,0 +1,19 @@
+/* <kk-list-table> — the shared list table (js/components/kk-list-table.js), an optional component. */
+
+.kk-list-table-clickable {
+    cursor: pointer;
+}
+
+.kk-list-table-picker {
+    min-width: 12rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* A long option list scrolls inside the menu rather than off the page. */
+.kk-list-table-options {
+    max-height: 20rem;
+    overflow-y: auto;
+    min-width: 16rem;
+}

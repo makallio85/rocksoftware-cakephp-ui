@@ -1,0 +1,68 @@
+# Finnish texts of the shared screen frame (domain rock_software_ui).
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fi\n"
+
+msgid "Main menu"
+msgstr "Päävalikko"
+
+msgid "Pin menu"
+msgstr "Kiinnitä valikko"
+
+msgid "Unpin menu"
+msgstr "Irrota valikko"
+
+msgid "Close menu"
+msgstr "Sulje valikko"
+
+msgid "Open menu"
+msgstr "Avaa valikko"
+
+msgid "User menu"
+msgstr "Käyttäjävalikko"
+
+msgid "Applications"
+msgstr "Sovellukset"
+
+msgid "Close"
+msgstr "Sulje"
+
+msgid "Back to the dashboard"
+msgstr "Takaisin dashboardille"
+
+msgid "Breadcrumb"
+msgstr "Murupolku"
+
+msgid "Move the window"
+msgstr "Raahaa ikkunaa"
+
+msgid "No rows match the filters."
+msgstr "Ei rivejä valituilla rajauksilla."
+
+msgid "All"
+msgstr "Kaikki"
+
+msgid "None selected = all"
+msgstr "Ei valintaa = kaikki"
+
+msgid "From"
+msgstr "Alkaen"
+
+msgid "To"
+msgstr "Päättyen"
+
+msgid "Order"
+msgstr "Järjestys"
+
+msgid "Ascending"
+msgstr "Nouseva"
+
+msgid "Descending"
+msgstr "Laskeva"
+
+msgid "Select row"
+msgstr "Valitse rivi"
+
+msgid "Select all"
+msgstr "Valitse kaikki"
