@@ -1,0 +1,83 @@
+/* The breadcrumb in the top bar (element `breadcrumb`), an optional component. */
+
+/* -------------------------------------------------------------- breadcrumb */
+/* Sits between the hamburger and the right-hand cluster and gives way to it:
+   the trail is cut, never the bell or the user menu. */
+.kk-breadcrumb {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.kk-breadcrumb .breadcrumb {
+    flex-wrap: nowrap;
+    align-items: center;
+    margin: 0;
+    font-size: .875rem;
+    white-space: nowrap;
+}
+
+.kk-breadcrumb .breadcrumb-item {
+    min-width: 0;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--kk-slate-600);
+}
+
+.kk-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    font-family: bootstrap-icons;
+    content: "\F285"; /* bi-chevron-right */
+    font-size: .7rem;
+    color: var(--kk-slate-400);
+    float: none;
+    padding-right: .5rem;
+}
+
+.kk-breadcrumb .breadcrumb-item + .breadcrumb-item { padding-left: .5rem; }
+
+.kk-breadcrumb .breadcrumb-item a {
+    color: var(--kk-slate-600);
+    text-decoration: none;
+}
+
+.kk-breadcrumb .breadcrumb-item a:hover {
+    color: var(--kk-accent);
+    text-decoration: underline;
+}
+
+.kk-breadcrumb .kk-breadcrumb-text { color: var(--kk-slate-500); }
+
+.kk-breadcrumb .kk-breadcrumb-denied span {
+    border-bottom: 1px dotted var(--kk-slate-400);
+    cursor: help;
+}
+
+.kk-breadcrumb .breadcrumb-item.active {
+    flex-shrink: 0;
+    color: var(--kk-slate-900);
+    font-weight: 600;
+}
+
+.kk-breadcrumb-back {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    min-height: 44px;
+    max-width: 100%;
+    padding: 0 .4rem;
+    border-radius: .5rem;
+    color: var(--kk-slate-700);
+    font-size: .95rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.kk-breadcrumb-back span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kk-breadcrumb-back:hover { background: var(--kk-slate-100); color: var(--kk-accent); }

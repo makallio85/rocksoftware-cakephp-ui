@@ -1,0 +1,23 @@
+# docker-compose.yml — development sandbox for the rocksoftware-cakephp-ui plugin.
+#
+# NOT a product deployment. The plugin is a library; the container runs its
+# tests and serves the test application with the frame on
+# http://127.0.0.1:8085 (fictional menu and user), to look at in a browser:
+#
+#   docker compose up -d
+#   docker compose exec app vendor/bin/phpunit
+#   docker compose exec app composer cs-check
+#   docker compose exec app composer stan
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ./:/app
+    ports:
+      - "127.0.0.1:8085:8080"
+    command: >
+      sh -c "[ -d vendor ] || composer install --no-interaction --prefer-dist;
+             php -S 0.0.0.0:8080 -t tests/test_app/webroot tests/test_app/webroot/index.php"
