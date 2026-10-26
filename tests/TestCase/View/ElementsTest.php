@@ -30,7 +30,7 @@ class ElementsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Configure::write('Ui', ['appName' => 'Demo App']);
+        Configure::write('Ui', []);
         UiPlugin::applyDefaults();
         Router::reload();
         Router::createRouteBuilder('/')->scope('/', function (RouteBuilder $routes): void {

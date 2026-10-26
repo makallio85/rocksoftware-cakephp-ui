@@ -23,8 +23,9 @@ http://127.0.0.1:8085.
    as they are unless the change is meant for all of them. Anything one application needs is a
    setting with a default that keeps today's frame (`UiPlugin::DEFAULTS`), an element hook or a
    block, never a fork of a template.
-3. **Applications supply, the plugin renders.** The application's name, icon, language, menu
-   (`View\MainMenuInterface`) and user menu come in; nothing about any application is written
+3. **Applications supply, the plugin renders.** The application's icon, language, menu
+   (`View\MainMenuInterface`) and user menu come in, and its name from the settings plugin
+   (`application.name`); nothing about any application is written
    into the plugin.
 4. **Texts are translatable.** Every user-facing string goes through `__d('rock_software_ui', …)`
    and has a Finnish entry in `resources/locales/fi/rock_software_ui.po` in the same change

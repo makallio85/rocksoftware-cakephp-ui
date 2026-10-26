@@ -12,13 +12,17 @@ use Cake\View\Helper;
 use DateTimeInterface;
 use InvalidArgumentException;
 use NumberFormatter;
+use RockSoftware\Settings\Settings;
+use RockSoftware\Settings\SettingsPlugin;
 use RockSoftware\Ui\UiPlugin;
 use RockSoftware\Ui\View\MainMenuInterface;
 use Throwable;
 
 /**
- * What the frame's layouts and elements read: the application's settings
- * (`UiPlugin::DEFAULTS`), its main menu and the user menu; and the shared
+ * What the frame's layouts and elements read: the application's name and
+ * the line under it (the settings plugin's `application.name` and
+ * `application.organization_name`), the frame's settings
+ * (`UiPlugin::DEFAULTS`), the main menu and the user menu; and the shared
  * in-page pieces a template uses: badges (`badge()`), a post button that asks
  * first (`postButton()`), the paginator's templates and the date and number
  * formats (`date()`, `dateTime()`, `number()`, `money()`). The layouts load
@@ -114,11 +118,13 @@ class UiHelper extends Helper
     private array $requiredComponents = [];
 
     /**
+     * The application's name: the setting `application.name`.
+     *
      * @return string
      */
     public function appName(): string
     {
-        return (string)UiPlugin::setting('appName');
+        return (string)Settings::get(SettingsPlugin::APPLICATION_NAME);
     }
 
     /**
@@ -130,11 +136,14 @@ class UiHelper extends Helper
     }
 
     /**
+     * The line under the application's name on the sign-in card: the setting
+     * `application.organization_name`, or null when it is empty.
+     *
      * @return string|null
      */
     public function organizationName(): ?string
     {
-        $name = UiPlugin::setting('organizationName');
+        $name = Settings::get(SettingsPlugin::APPLICATION_ORGANIZATION_NAME);
 
         return is_string($name) && $name !== '' ? $name : null;
     }

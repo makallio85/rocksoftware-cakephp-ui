@@ -14,6 +14,7 @@ use Cake\Routing\RouteBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use RockSoftware\Settings\SettingsPlugin;
 use RockSoftware\Ui\UiPlugin;
 
 /**
@@ -33,6 +34,7 @@ class Application extends BaseApplication
      */
     public function bootstrap(): void
     {
+        $this->addPlugin(SettingsPlugin::class);
         $this->addPlugin(UiPlugin::class);
     }
 

@@ -4,7 +4,11 @@ declare(strict_types=1);
 use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Core\Plugin;
+use Cake\Datasource\ConnectionManager;
 use Cake\Utility\Security;
+use Migrations\TestSuite\Migrator;
+use RockSoftware\Settings\Settings;
+use RockSoftware\Settings\SettingsPlugin;
 use RockSoftware\Ui\UiPlugin;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -68,6 +72,17 @@ Cache::setConfig([
     '_cake_routes_' => ['className' => 'Null'],
     'default' => ['className' => 'Array'],
 ]);
+
+// The settings plugin holds the application's name. A file rather than
+// :memory:, because the migration runner opens its own connection.
+ConnectionManager::setConfig('test', ['url' => 'sqlite:///' . TMP . 'test.sqlite']);
+ConnectionManager::alias('test', 'default');
+Plugin::getCollection()->add(new SettingsPlugin());
+SettingsPlugin::applyDefaults();
+SettingsPlugin::loadTranslations();
+SettingsPlugin::declareApplicationSettings();
+(new Migrator())->run(['connection' => 'test', 'plugin' => SettingsPlugin::NAME]);
+Settings::set(SettingsPlugin::APPLICATION_NAME, 'Demo App');
 
 Plugin::getCollection()->add(new UiPlugin(['path' => dirname(__DIR__) . DS]));
 UiPlugin::applyDefaults();

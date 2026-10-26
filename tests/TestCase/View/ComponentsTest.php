@@ -33,7 +33,7 @@ class ComponentsTest extends TestCase
      */
     private function useComponents(array $components): void
     {
-        Configure::write('Ui', ['appName' => 'Demo App', 'components' => $components]);
+        Configure::write('Ui', ['components' => $components]);
         UiPlugin::applyDefaults();
     }
 
