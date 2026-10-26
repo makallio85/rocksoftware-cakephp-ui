@@ -91,6 +91,26 @@ class ElementsTest extends TestCase
         $this->assertTrue($this->ui()->isEnabled('confirm'));
     }
 
+    public function testKebabButtonItemRunsAScript(): void
+    {
+        $html = $this->view->element('ui/kebab', ['items' => [
+            ['type' => 'button', 'title' => 'Archive <7>…', 'icon' => 'bi bi-archive', 'isDestructive' => true,
+                'attributes' => ['data-kk-modal-open' => 'archive-7', 'id' => 'archive-opener']],
+            ['type' => 'button', 'title' => 'Pause', 'isDisabled' => true],
+        ]]);
+
+        $this->assertStringContainsString(
+            '<li><button type="button" class="dropdown-item text-danger" data-kk-modal-open="archive-7" id="archive-opener">'
+            . '<i class="bi bi-archive" aria-hidden="true"></i> Archive &lt;7&gt;…</button></li>',
+            $html,
+        );
+        $this->assertStringContainsString(
+            '<li><button type="button" class="dropdown-item" disabled="disabled">Pause</button></li>',
+            $html,
+        );
+        $this->assertStringNotContainsString('dropdown-item-text', $html);
+    }
+
     public function testKebabWithNothingInItRendersNothing(): void
     {
         $this->assertSame('', trim($this->view->element('ui/kebab', ['items' => []])));

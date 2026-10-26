@@ -508,7 +508,7 @@ class UiHelper extends Helper
         $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, $decimals);
         $formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $decimals);
         $formatter->setAttribute(NumberFormatter::ROUNDING_MODE, NumberFormatter::ROUND_HALFUP);
-        $text = $formatter->format((float)$value);
+        $text = $formatter->format($this->unsignedZero((float)$value, $formatter));
 
         return $text === false ? $empty : $text;
     }
@@ -532,13 +532,16 @@ class UiHelper extends Helper
         if ($value === null || $value === '' || !is_numeric($value)) {
             return $empty;
         }
+        $currency = strtoupper($currency);
         $formatter = new NumberFormatter($this->numberLocale(), NumberFormatter::CURRENCY);
+        // The currency's own digits (0 for JPY), unless the caller set them.
+        $formatter->setTextAttribute(NumberFormatter::CURRENCY_CODE, $currency);
         if ($decimals !== null) {
             $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, $decimals);
             $formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $decimals);
         }
         $formatter->setAttribute(NumberFormatter::ROUNDING_MODE, NumberFormatter::ROUND_HALFUP);
-        $text = $formatter->formatCurrency((float)$value, strtoupper($currency));
+        $text = $formatter->formatCurrency($this->unsignedZero((float)$value, $formatter), $currency);
 
         return $text === false ? $empty : $text;
     }
@@ -561,7 +564,7 @@ class UiHelper extends Helper
         $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, $decimals);
         $formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $decimals);
         $formatter->setAttribute(NumberFormatter::ROUNDING_MODE, NumberFormatter::ROUND_HALFUP);
-        $text = $formatter->format((float)$fraction);
+        $text = $formatter->format($this->unsignedZero((float)$fraction, $formatter, 100));
 
         return $text === false ? $empty : $text;
     }
@@ -625,6 +628,22 @@ class UiHelper extends Helper
         }
 
         return $moment->setTimezone($this->displayTimezone());
+    }
+
+    /**
+     * The value, or 0 when it shows as zero: a tiny negative such as -0.001
+     * rounds to zero and would show as `-0,00`.
+     *
+     * @param float $value The value as formatted.
+     * @param \NumberFormatter $formatter Its digits after the separator decide.
+     * @param int $scale What the formatter multiplies the value by (100 for a percentage).
+     * @return float
+     */
+    private function unsignedZero(float $value, NumberFormatter $formatter, int $scale = 1): float
+    {
+        $digits = max(0, (int)$formatter->getAttribute(NumberFormatter::MAX_FRACTION_DIGITS));
+
+        return round(abs($value) * $scale, $digits) === 0.0 ? 0.0 : $value;
     }
 
     /**

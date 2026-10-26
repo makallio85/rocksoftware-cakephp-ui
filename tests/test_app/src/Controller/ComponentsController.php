@@ -59,6 +59,18 @@ class ComponentsController extends AppController
     }
 
     /**
+     * The markup components on a page whose Vue comes after parsing, as an
+     * application's Vite bundle sets `window.Vue`: the plugin's runtime is
+     * loaded `defer`, not as one of the frame's scripts.
+     *
+     * @return void
+     */
+    public function lateVue(): void
+    {
+        $this->set('sendAfter', new DateTime('2026-10-27 06:00:00', 'UTC'));
+    }
+
+    /**
      * The confirm dialog's target: says what would have happened.
      *
      * @param string $id The row.
