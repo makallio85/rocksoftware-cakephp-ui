@@ -1,6 +1,7 @@
 /**
  * Dates and numbers as a person reads them, the same as the PHP helper's
- * `Ui->date()`, `Ui->dateTime()`, `Ui->number()` and `Ui->money()`:
+ * `Ui->date()`, `Ui->dateTime()`, `Ui->number()`, `Ui->money()` and
+ * `Ui->percent()`:
  *
  *     formatDate('2026-10-26')                 // '26.10.2026'
  *     formatDate('2026-10-26T22:30:00Z')       // '27.10.2026' (Helsinki)
@@ -8,6 +9,7 @@
  *     formatNumber(1842.3, 2)                  // '1 842,30' in Finnish, '1,842.30' in English
  *     formatMoney('1842.30')                   // '1 842,30 €' in Finnish, '€1,842.30' in English
  *     formatMoney(7000, 'USD', 0)
+ *     formatPercent(0.75)                      // '75 %' in Finnish, '75%' in English
  *
  * A calendar day ('YYYY-MM-DD') shows as it is; a moment (a Date, an ISO
  * string, a Unix timestamp in seconds) shows in the display time zone (the
@@ -183,6 +185,28 @@ export function formatMoney(value, currency = 'EUR', decimals = null, empty = EM
 }
 
 /**
+ * A share as a percentage in the page's locale: '75 %' in Finnish, '75%' in
+ * English, for a fraction (0.75).
+ *
+ * @param {number|string|null|undefined} fraction 0.75 for 75 %
+ * @param {number} [decimals]
+ * @param {string} [empty]
+ * @param {{locale?: string}} [options]
+ * @returns {string}
+ */
+export function formatPercent(fraction, decimals = 0, empty = EMPTY, options = {}) {
+    const number = toNumber(fraction);
+    if (number === null) {
+        return empty;
+    }
+    return new Intl.NumberFormat(numberLocale(options), {
+        style: 'percent',
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+    }).format(number);
+}
+
+/**
  * A file size: 512 B, 34 kB, 2.4 MB (the decimal in the page's locale).
  *
  * @param {number} bytes
@@ -199,4 +223,4 @@ export function formatFileSize(bytes, options = {}) {
     return `${formatNumber(bytes / (1024 * 1024), 1, EMPTY, options)} MB`;
 }
 
-export default { formatDate, formatDateTime, formatNumber, formatMoney, formatFileSize, toMoment, zonedParts };
+export default { formatDate, formatDateTime, formatNumber, formatMoney, formatPercent, formatFileSize, toMoment, zonedParts };

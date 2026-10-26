@@ -61,6 +61,9 @@ class UiPlugin extends BasePlugin
      *   `bodyEnd` (after the frame's scripts, before the `script` block).
      * - `locale`: the language of the frame's texts when it differs from the
      *   application's locale (e.g. `fi`); null follows the application.
+     * - `numberLocale`: the locale numbers, money and percentages are written
+     *   in when it differs from the texts' (e.g. `fi_FI` for English texts
+     *   with Finnish numbers); null follows `locale`.
      * - `displayTimezone`: the time zone `UiHelper::dateTime()` shows moments
      *   in.
      *
@@ -86,6 +89,7 @@ class UiPlugin extends BasePlugin
         ],
         'elements' => [],
         'locale' => null,
+        'numberLocale' => null,
         'displayTimezone' => 'Europe/Helsinki',
     ];
 

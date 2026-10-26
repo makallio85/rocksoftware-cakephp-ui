@@ -207,6 +207,7 @@ $rowMenu = fn(array $row): array => [
                 <tr><td>dateTime</td><td><?= h($this->Ui->dateTime('2026-10-26T06:14:00Z')) ?></td><td data-demo-format="dateTime" data-value="2026-10-26T06:14:00Z"></td></tr>
                 <tr><td>number</td><td><?= h($this->Ui->number(1842.3, 2)) ?></td><td data-demo-format="number" data-value="1842.3"></td></tr>
                 <tr><td>money</td><td><?= h($this->Ui->money('1842.30')) ?></td><td data-demo-format="money" data-value="1842.30"></td></tr>
+                <tr><td>percent</td><td><?= h($this->Ui->percent(0.0425, 1)) ?></td><td data-demo-format="percent" data-value="0.0425"></td></tr>
                 </tbody>
             </table>
         </div></section>
@@ -247,7 +248,8 @@ $rowMenu = fn(array $row): array => [
                 <dt class="col-5 fw-normal text-body-secondary">date()</dt><dd class="col-7"><?= h($this->Ui->date('2026-10-26')) ?></dd>
                 <dt class="col-5 fw-normal text-body-secondary">dateTime()</dt><dd class="col-7"><?= h($this->Ui->dateTime('2026-10-26T06:14:00Z')) ?></dd>
                 <dt class="col-5 fw-normal text-body-secondary">number()</dt><dd class="col-7"><?= h($this->Ui->number(1842.3, 1)) ?></dd>
-                <dt class="col-5 fw-normal text-body-secondary">money()</dt><dd class="col-7 mb-0"><?= h($this->Ui->money('1842.30')) ?></dd>
+                <dt class="col-5 fw-normal text-body-secondary">money()</dt><dd class="col-7"><?= h($this->Ui->money('1842.30')) ?></dd>
+                <dt class="col-5 fw-normal text-body-secondary">percent()</dt><dd class="col-7 mb-0"><?= h($this->Ui->percent(0.75)) ?></dd>
             </dl>
         </div></section>
     </div>

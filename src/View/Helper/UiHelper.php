@@ -25,7 +25,7 @@ use Throwable;
  * (`UiPlugin::DEFAULTS`), the main menu and the user menu; and the shared
  * in-page pieces a template uses: badges (`badge()`), a post button that asks
  * first (`postButton()`), the paginator's templates and the date and number
- * formats (`date()`, `dateTime()`, `number()`, `money()`). The layouts load
+ * formats (`date()`, `dateTime()`, `number()`, `money()`, `percent()`). The layouts load
  * it themselves; a template that uses it before the layout runs loads it in
  * the application's `AppView` (`$this->addHelper('RockSoftware/Ui.Ui')`).
  *
@@ -544,6 +544,29 @@ class UiHelper extends Helper
     }
 
     /**
+     * A share as a percentage in the language of the page: `75 %` in
+     * Finnish, `75%` in English, for a fraction (`0.75`).
+     *
+     * @param string|float|int|null $fraction The share as a fraction: `0.75` for 75 %.
+     * @param int $decimals Digits after the decimal separator.
+     * @param string $empty What a missing or unreadable value shows.
+     * @return string
+     */
+    public function percent(string|int|float|null $fraction, int $decimals = 0, string $empty = '—'): string
+    {
+        if ($fraction === null || $fraction === '' || !is_numeric($fraction)) {
+            return $empty;
+        }
+        $formatter = new NumberFormatter($this->numberLocale(), NumberFormatter::PERCENT);
+        $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, $decimals);
+        $formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $decimals);
+        $formatter->setAttribute(NumberFormatter::ROUNDING_MODE, NumberFormatter::ROUND_HALFUP);
+        $text = $formatter->format((float)$fraction);
+
+        return $text === false ? $empty : $text;
+    }
+
+    /**
      * A day or moment as the date picker's value: wall-clock time in the
      * display time zone, `Y-m-d H:i` (`datetime`), `Y-m-d` (`date`), `H:i`
      * (`time`) or `Y-m` (`month`); '' for a missing or unreadable value. A
@@ -605,16 +628,23 @@ class UiHelper extends Helper
     }
 
     /**
-     * The ICU locale numbers are written in: the `locale` setting or the
-     * application's locale. ICU's `en_US_POSIX`, a server's default, groups
-     * no thousands, so it counts as `en_US`.
+     * The ICU locale numbers are written in: the `numberLocale` setting, else
+     * the `locale` setting, else the application's locale. ICU's
+     * `en_US_POSIX`, a server's default, groups no thousands, so it counts as
+     * `en_US`.
      *
      * @return string
      */
     private function numberLocale(): string
     {
-        $fixed = UiPlugin::setting('locale');
-        $locale = is_string($fixed) && $fixed !== '' ? $fixed : I18n::getLocale();
+        $locale = I18n::getLocale();
+        foreach (['numberLocale', 'locale'] as $setting) {
+            $fixed = UiPlugin::setting($setting);
+            if (is_string($fixed) && $fixed !== '') {
+                $locale = $fixed;
+                break;
+            }
+        }
 
         return (string)preg_replace('/_POSIX$/i', '', $locale);
     }
