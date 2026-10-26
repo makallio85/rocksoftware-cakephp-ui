@@ -53,7 +53,7 @@ plugin, so every application shows the same frame and none keeps its own copy.
 
 ## Installing in an application
 
-1. **Composer.** Run `composer require makallio85/rocksoftware-cakephp-ui:^2.1`. It brings
+1. **Composer.** Run `composer require makallio85/rocksoftware-cakephp-ui:^2.3`. It brings
    `makallio85/rocksoftware-cakephp-settings`, which holds the application's name.
 2. **Plugins.** Add both to `Application::bootstrap()`:
 
@@ -268,6 +268,8 @@ item is left.
     ['type' => 'text', 'html' => $switchMarkup],               // e.g. a form-switch
     ['title' => 'Edit', 'url' => ['action' => 'edit', $id], 'icon' => 'bi bi-pencil'],
     ['title' => 'Resend', 'url' => ['action' => 'resend', $id], 'isDisabled' => true],
+    ['type' => 'button', 'title' => 'Archive…', 'icon' => 'bi bi-archive',   // a script acts on it
+     'attributes' => ['data-kk-modal-open' => 'archive-' . $id]],
     ['type' => 'divider'],
     ['type' => 'post', 'title' => 'Delete', 'url' => ['action' => 'delete', $id],
      'confirm' => 'Delete this message?', 'isDestructive' => true],
@@ -275,6 +277,11 @@ item is left.
 ```
 
 `size` is `sm` (the default, for a row) or `md`.
+
+A `button` item is a `<button type="button" class="dropdown-item">` with no address: its
+`attributes` (any HTML attributes) say what a script does with it, such as
+`data-kk-modal-open` opening a markup modal. It takes `icon`, `isDestructive` and `isDisabled`
+like a link. A `text` item is for markup that is no action (a switch), not for a button.
 
 ### Confirmation before a destructive action
 
@@ -370,6 +377,7 @@ $this->Ui->money('1842.30');             // 1 842,30 € in Finnish, €1,842.30
 $this->Ui->money(7000, 'USD', 0);
 $this->Ui->percent(0.75);                // 75 % in Finnish, 75% in English (a fraction)
 $this->Ui->percent('0.0425', 1);         // 4,3 % / 4.3%
+$this->Ui->money('-0.001');              // 0,00 € / €0.00: what rounds to zero has no minus
 ```
 
 A calendar day (`Cake\I18n\Date`, a `YYYY-MM-DD` string) shows as it is; a moment
@@ -411,6 +419,13 @@ write the components with the plugin's elements. Each element writes plain marku
 An element loads its own component on the page (`ui/list_table` → `listTable` and so on), so
 only `vue` has to be on. Markup a script adds later is mounted with
 `window.KkUi.mount(element)`.
+
+The markup mounts once the page is parsed and `window.Vue` is there: as parsing ends when Vue
+is already loaded (the plugin's `vue`, or Vue as a plain script before the plugin's), else after
+`DOMContentLoaded`, which comes after deferred and module scripts, so a Vite bundle that sets
+`window.Vue` (below) gets its elements mounted too. Should Vue come later still, the script
+retries for a few seconds after the window's `load`, then warns in the console; such a page
+calls `window.KkUi.mount(document)` itself once it has set `window.Vue`.
 
 **With Vue loaded as a plain script** (`window.Vue`, the global build): leave `vue` off, switch
 on the components, and register them in the application's own apps:

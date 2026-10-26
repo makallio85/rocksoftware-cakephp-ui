@@ -10,12 +10,18 @@
  *          'confirm' => 'Delete this provider?', 'isDestructive' => true],
  *     ]]) ?>
  *
+ *     ['type' => 'button', 'title' => 'Archive…', 'attributes' => ['data-kk-modal-open' => 'archive']]
+ *
  * Items, by `type`:
  * - `link` (the default): `title`, `url`, optional `icon` (Bootstrap Icons
  *   class), `isDestructive`, `isDisabled`;
  * - `post`: a form posting to `url` (`UiHelper::postButton()`): `title`,
  *   `url`, optional `icon`, `data`, `method`, `confirm`, `confirmTitle`,
  *   `confirmButton`, `confirmTone`, `isDestructive`;
+ * - `button`: a `<button type="button">` for a script to act on, such as
+ *   opening a markup modal: `title`, `attributes` (its HTML attributes, e.g.
+ *   `['data-kk-modal-open' => 'archive']`), optional `icon`, `isDestructive`,
+ *   `isDisabled`;
  * - `header`: a heading, `title`;
  * - `text`: markup as it is, `html`, e.g. a switch (`form-check form-switch`);
  * - `divider`.
@@ -69,6 +75,12 @@ $postItem = function (array $item, string $title, string $class): string {
         <li><h6 class="dropdown-header"><?= h((string)($item['title'] ?? '')) ?></h6></li>
             <?php elseif ($type === 'text') : ?>
         <li><div class="dropdown-item-text"><?= (string)($item['html'] ?? '') ?></div></li>
+            <?php elseif ($type === 'button') : ?>
+        <li><?= $this->Html->tag('button', $itemTitle, array_filter([
+            'type' => 'button',
+            'class' => $itemClass,
+            'disabled' => !empty($item['isDisabled']),
+        ]) + (array)($item['attributes'] ?? [])) ?></li>
             <?php elseif ($type === 'post') : ?>
         <li><?= $postItem($item, $itemTitle, $itemClass) ?></li>
             <?php elseif (!empty($item['isDisabled'])) : ?>

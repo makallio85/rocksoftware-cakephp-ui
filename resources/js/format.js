@@ -142,6 +142,20 @@ function toNumber(value) {
 }
 
 /**
+ * The number, or 0 when the formatter shows it as zero: a tiny negative such
+ * as -0.001 rounds to zero and would show as '-0,00'.
+ *
+ * @param {number} number
+ * @param {Intl.NumberFormat} formatter its digits after the separator decide
+ * @param {number} [scale] what the formatter multiplies by (100 for a percentage)
+ * @returns {number}
+ */
+export function unsignedZero(number, formatter, scale = 1) {
+    const factor = 10 ** formatter.resolvedOptions().maximumFractionDigits;
+    return Math.round(Math.abs(number) * scale * factor) === 0 ? 0 : number;
+}
+
+/**
  * A number in the page's locale, rounded half away from zero.
  *
  * @param {number|string|null|undefined} value a number or a decimal string ('1842.30')
@@ -155,10 +169,11 @@ export function formatNumber(value, decimals = 0, empty = EMPTY, options = {}) {
     if (number === null) {
         return empty;
     }
-    return new Intl.NumberFormat(numberLocale(options), {
+    const formatter = new Intl.NumberFormat(numberLocale(options), {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
-    }).format(number);
+    });
+    return formatter.format(unsignedZero(number, formatter));
 }
 
 /**
@@ -181,7 +196,8 @@ export function formatMoney(value, currency = 'EUR', decimals = null, empty = EM
         settings.minimumFractionDigits = decimals;
         settings.maximumFractionDigits = decimals;
     }
-    return new Intl.NumberFormat(numberLocale(options), settings).format(number);
+    const formatter = new Intl.NumberFormat(numberLocale(options), settings);
+    return formatter.format(unsignedZero(number, formatter));
 }
 
 /**
@@ -199,11 +215,12 @@ export function formatPercent(fraction, decimals = 0, empty = EMPTY, options = {
     if (number === null) {
         return empty;
     }
-    return new Intl.NumberFormat(numberLocale(options), {
+    const formatter = new Intl.NumberFormat(numberLocale(options), {
         style: 'percent',
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
-    }).format(number);
+    });
+    return formatter.format(unsignedZero(number, formatter, 100));
 }
 
 /**

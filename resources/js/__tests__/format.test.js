@@ -72,6 +72,29 @@ describe('format.js', () => {
         expect(formatPercent(-0.125, 1)).toBe('\u221212,5\u00a0%');
     });
 
+    it('shows a tiny negative that rounds to zero without a minus, in English', () => {
+        expect(formatNumber(-0.004, 2)).toBe('0.00');
+        expect(formatNumber(-0.4)).toBe('0');
+        expect(formatNumber(-0)).toBe('0');
+        expect(formatNumber('-0.006', 2)).toBe('-0.01');
+        expect(formatMoney('-0.001')).toBe('€0.00');
+        expect(formatMoney(-0.4, 'EUR', 0)).toBe('€0');
+        expect(formatMoney(-0.4, 'JPY')).toBe('¥0');
+        expect(formatPercent(-0.0004, 1)).toBe('0.0%');
+        expect(formatPercent(-0.004)).toBe('0%');
+        expect(formatPercent(-0.006)).toBe('-1%');
+    });
+
+    it('shows a tiny negative that rounds to zero without a minus, in Finnish', () => {
+        document.body.innerHTML = '<script type="application/json" id="kk-ui-texts">{"numberLocale":"fi-FI"}</script>';
+        resetTexts();
+        expect(formatNumber(-0.004, 2)).toBe('0,00');
+        expect(formatNumber(-0.4)).toBe('0');
+        expect(formatMoney('-0.001')).toBe('0,00\u00a0€');
+        expect(formatPercent(-0.0004, 1)).toBe('0,0\u00a0%');
+        expect(formatNumber(-0.006, 2)).toBe('\u22120,01');
+    });
+
     it('shows a dash, or what it is given, for a missing percentage', () => {
         expect(formatPercent(null)).toBe('—');
         expect(formatPercent('abc')).toBe('—');

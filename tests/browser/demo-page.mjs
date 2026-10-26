@@ -121,6 +121,16 @@ async function run(browser, label, size) {
     await page.keyboard.press('Escape');
     await dialog.waitFor({ state: 'detached' });
 
+    // A kebab's button item opens the same modal.
+    await page.locator('#demo-modal .kk-kebab-toggle').click();
+    await page.locator('#demo-kebab-schedule').waitFor();
+    await shoot(page, '02b-kebab-button-item', label, page.locator('#demo-modal'));
+    await page.locator('#demo-kebab-schedule').click();
+    await dialog.waitFor();
+    expect((await dialog.locator('.kk-modal-title').innerText()) === 'Schedule a message', 'the kebab\'s button item opens the modal');
+    await page.keyboard.press('Escape');
+    await dialog.waitFor({ state: 'detached' });
+
     // The form's own picker and file drop, and a refused file.
     const form = page.locator('.kk-page-narrow');
     await form.locator('#logo').setInputFiles({ name: 'logo.gif', mimeType: 'image/gif', buffer: Buffer.alloc(10, 1) });
@@ -148,6 +158,22 @@ async function run(browser, label, size) {
     await app.scrollIntoViewIfNeeded();
     await shoot(page, '06-vue-app', label, app);
     await shoot(page, '07-formats', label, page.locator('#demo-format'));
+    expect((await page.locator('#demo-format').innerText()).indexOf('-0') === -1, 'no format shows a minus zero');
+
+    // Vue after parsing (a deferred script, as a Vite bundle sets it): the
+    // markup still mounts.
+    await page.goto(`${base}/components/late-vue`, { waitUntil: 'networkidle' });
+    await page.locator('#late-vue .kk-list-table').waitFor();
+    expect(await page.locator('#late-remind-at').inputValue() === '27.10.2026 08.00', 'the date picker mounted after Vue arrived');
+    await shoot(page, '08-vue-after-parsing', label);
+    await page.locator('#late-kebab-note').evaluate((button) => button.click());
+    await page.locator('.kk-modal-dialog #late-modal-body').waitFor();
+    if (shots) {
+        // Shot once the modal has faded in.
+        await page.waitForTimeout(400);
+    }
+    await shoot(page, '09-vue-after-parsing-modal', label);
+    await page.keyboard.press('Escape');
 
     await context.close();
 }

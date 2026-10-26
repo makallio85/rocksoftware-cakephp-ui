@@ -65,6 +65,29 @@ class DemoPageTest extends TestCase
         $this->assertResponseContains('/rock_software/ui/js/kk-format.js');
     }
 
+    public function testTheDemoShowsAKebabButtonItemAndZeroWithoutAMinus(): void
+    {
+        $this->get('/components');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('data-kk-modal-open="demo-schedule" id="demo-kebab-schedule"');
+        $this->assertResponseContains('<td>number −0.004</td><td>0.00</td>');
+        $this->assertResponseContains('<td>money −0.001</td><td>€0.00</td>');
+        $this->assertResponseContains('<td>percent −0.0004</td><td>0.0%</td>');
+    }
+
+    public function testThePageWithVueAfterParsingLoadsItDeferred(): void
+    {
+        $this->get('/components/late-vue');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('/rock_software/ui/js/components/kk-vue-components.js');
+        $this->assertResponseContains('<script src="/rock_software/ui/js/vue.runtime.global.prod.js" defer="defer"></script>');
+        $this->assertResponseContains('<div data-kk-modal="late-note"');
+        $this->assertResponseContains('data-kk-date-time-picker');
+        $this->assertResponseContains('<div data-kk-list-table id="late-list">');
+    }
+
     public function testTheListFiltersAndSortsOnTheServer(): void
     {
         $this->get('/components?status=danger&direction=asc');

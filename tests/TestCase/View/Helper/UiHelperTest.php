@@ -211,6 +211,31 @@ class UiHelperTest extends TestCase
         $this->assertSame("\u{2212}12,5\u{a0}%", $this->ui->percent(-0.125, 1));
     }
 
+    public function testATinyNegativeThatRoundsToZeroHasNoMinusInEnglish(): void
+    {
+        $this->assertSame('0.00', $this->ui->number(-0.004, 2));
+        $this->assertSame('0', $this->ui->number(-0.4));
+        $this->assertSame('0', $this->ui->number(-0.0));
+        $this->assertSame('-0.01', $this->ui->number('-0.006', 2));
+        $this->assertSame('€0.00', $this->ui->money('-0.001'));
+        $this->assertSame('€0', $this->ui->money(-0.4, 'EUR', 0));
+        $this->assertSame('¥0', $this->ui->money(-0.4, 'JPY'));
+        $this->assertSame('0.0%', $this->ui->percent(-0.0004, 1));
+        $this->assertSame('0%', $this->ui->percent(-0.004));
+        $this->assertSame('-1%', $this->ui->percent(-0.006));
+    }
+
+    public function testATinyNegativeThatRoundsToZeroHasNoMinusInFinnish(): void
+    {
+        I18n::setLocale('fi_FI');
+
+        $this->assertSame('0,00', $this->ui->number(-0.004, 2));
+        $this->assertSame('0', $this->ui->number(-0.4));
+        $this->assertSame("0,00\u{a0}€", $this->ui->money('-0.001'));
+        $this->assertSame("0,0\u{a0}%", $this->ui->percent(-0.0004, 1));
+        $this->assertSame("\u{2212}0,01", $this->ui->number(-0.006, 2));
+    }
+
     public function testAMissingPercentageShowsTheEmptyText(): void
     {
         $this->assertSame('—', $this->ui->percent(null));

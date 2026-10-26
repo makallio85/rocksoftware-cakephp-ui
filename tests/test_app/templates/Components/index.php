@@ -172,8 +172,20 @@ $rowMenu = fn(array $row): array => [
     <div class="col-12 col-lg-6">
         <section class="card h-100" id="demo-modal"><div class="card-body">
             <h2 class="h6 text-uppercase text-body-secondary small fw-bold">Modal</h2>
-            <p class="small text-body-secondary">One modal: the header holds the title, the move handle and the close button. Its body is the page's own form, with the date picker and the file drop.</p>
-            <button type="button" class="btn btn-primary" data-kk-modal-open="demo-schedule" id="demo-open-modal">Schedule a message…</button>
+            <p class="small text-body-secondary">One modal, opened by the button or by a kebab's button item: the header holds the title, the move handle and the close button. Its body is the page's own form, with the date picker and the file drop.</p>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-primary" data-kk-modal-open="demo-schedule" id="demo-open-modal">Schedule a message…</button>
+                <?= $this->element('ui/kebab', ['size' => 'md', 'label' => 'More scheduling actions', 'items' => [
+                    // A button item: no address, a script acts on it; here it opens the modal.
+                    [
+                        'type' => 'button',
+                        'title' => 'Schedule from the menu…',
+                        'icon' => 'bi bi-calendar-plus',
+                        'attributes' => ['data-kk-modal-open' => 'demo-schedule', 'id' => 'demo-kebab-schedule'],
+                    ],
+                    ['type' => 'button', 'title' => 'Pause sending', 'icon' => 'bi bi-pause', 'isDisabled' => true],
+                ]]) ?>
+            </div>
             <?= $this->element('ui/modal', [
                 'name' => 'demo-schedule',
                 'title' => 'Schedule a message',
@@ -208,6 +220,10 @@ $rowMenu = fn(array $row): array => [
                 <tr><td>number</td><td><?= h($this->Ui->number(1842.3, 2)) ?></td><td data-demo-format="number" data-value="1842.3"></td></tr>
                 <tr><td>money</td><td><?= h($this->Ui->money('1842.30')) ?></td><td data-demo-format="money" data-value="1842.30"></td></tr>
                 <tr><td>percent</td><td><?= h($this->Ui->percent(0.0425, 1)) ?></td><td data-demo-format="percent" data-value="0.0425"></td></tr>
+                <?php // A tiny negative rounds to zero and shows no minus. ?>
+                <tr><td>number −0.004</td><td><?= h($this->Ui->number(-0.004, 2)) ?></td><td data-demo-format="number" data-value="-0.004"></td></tr>
+                <tr><td>money −0.001</td><td><?= h($this->Ui->money(-0.001)) ?></td><td data-demo-format="money" data-value="-0.001"></td></tr>
+                <tr><td>percent −0.0004</td><td><?= h($this->Ui->percent(-0.0004, 1)) ?></td><td data-demo-format="percent" data-value="-0.0004"></td></tr>
                 </tbody>
             </table>
         </div></section>

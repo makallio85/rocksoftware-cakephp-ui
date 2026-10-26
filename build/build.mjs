@@ -28,7 +28,7 @@ const pkg = (name) => JSON.parse(readFileSync(path.join(root, 'node_modules', na
 /** The component names the script defines on window, from index.js's exports. */
 const GLOBALS = ['KkUi', 'KkModal', 'KkListTable', 'KkPager', 'KkDateTimePicker', 'KkFileDrop'];
 
-async function bundle(entry, format, fileName, external = []) {
+async function bundle(entry, format, fileName, external = [], name = 'KkFormat') {
     await build({
         root,
         configFile: false,
@@ -40,7 +40,7 @@ async function bundle(entry, format, fileName, external = []) {
             emptyOutDir: false,
             minify: 'esbuild',
             target: 'es2019',
-            lib: { entry: path.join(root, entry), formats: [format], fileName: () => fileName, name: 'KkFormat' },
+            lib: { entry: path.join(root, entry), formats: [format], fileName: () => fileName, name },
             rollupOptions: { external, output: { exports: 'named' } },
         },
     });
@@ -58,6 +58,9 @@ const pickerVersion = pkg('@vuepic/vue-datepicker').version;
 // after this script (an element in `bodyEnd`), and every component then uses
 // that one copy of Vue.
 const components = await bundle('resources/js/index.js', 'cjs', 'components.cjs', ['vue']);
+// When the markup mounts run (resources/js/boot.js): no Vue in it, so it runs
+// before Vue is there and waits for it.
+const boot = await bundle('resources/js/boot.js', 'iife', 'boot.js', [], 'KkUiBoot');
 writeFileSync(out('js', 'components', 'kk-vue-components.js'), `/*!
  * RockSoftware/Ui components: kk-modal, kk-list-table, kk-pager, kk-date-time-picker, kk-file-drop.
  * Built by build/build.mjs from resources/js; do not edit. Precompiled, CSP-safe.
@@ -97,23 +100,18 @@ ${components}
         });
     });
     // The markup mounts (data-kk-modal, data-kk-list-table, data-kk-date-time-picker,
-    // data-kk-file-drop) once the page is parsed, before DOMContentLoaded listeners run.
-    function boot() {
-        var selector = '[data-kk-modal], [data-kk-list-table], input[data-kk-date-time-picker], input[data-kk-file-drop]';
-        if (document.querySelector(selector) || document.querySelector('[data-kk-modal-open]')) {
-            load().KkUi.mount(document);
-        }
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('readystatechange', function onReady() {
-            if (document.readyState !== 'loading') {
-                document.removeEventListener('readystatechange', onReady);
-                boot();
-            }
-        });
-    } else {
-        boot();
-    }
+    // data-kk-file-drop) once the page is parsed and window.Vue is there: as parsing
+    // ends when Vue is already loaded, else after DOMContentLoaded (a Vite or module
+    // script sets it then). See resources/js/boot.js.
+    ${boot}
+    var selector = '[data-kk-modal], [data-kk-list-table], input[data-kk-date-time-picker], input[data-kk-file-drop], [data-kk-modal-open]';
+    KkUiBoot.bootWhenVueReady(window, function () {
+        load().KkUi.mount(document);
+    }, {
+        isNeeded: function () {
+            return document.querySelector(selector) !== null;
+        },
+    });
 })();
 `);
 
