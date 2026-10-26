@@ -120,7 +120,7 @@ ${components}
 const format = await bundle('resources/js/format-global.js', 'iife', 'format.js');
 writeFileSync(out('js', 'kk-format.js'), `/*!
  * RockSoftware/Ui formats as window.KkFormat: formatDate, formatDateTime, formatNumber,
- * formatMoney, formatFileSize. Built by build/build.mjs from resources/js/format.js; do not edit.
+ * formatMoney, formatPercent, formatFileSize. Built by build/build.mjs from resources/js/format.js; do not edit.
  */
 ${format.replace(/^var KkFormat\s*=/, 'window.KkFormat =')}
 `);

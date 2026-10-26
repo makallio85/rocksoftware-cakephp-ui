@@ -48,7 +48,8 @@
                 date: function () { return f.formatDate(value); },
                 dateTime: function () { return f.formatDateTime(value); },
                 number: function () { return f.formatNumber(value, 2); },
-                money: function () { return f.formatMoney(value); }
+                money: function () { return f.formatMoney(value); },
+                percent: function () { return f.formatPercent(value, 1); }
             }[cell.getAttribute('data-demo-format')]();
             cell.textContent = text;
         });

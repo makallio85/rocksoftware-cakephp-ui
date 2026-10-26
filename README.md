@@ -159,6 +159,7 @@ Every setting has a default in `UiPlugin::DEFAULTS`.
 | `components` | all `false` | `['breadcrumb' => …, 'modal' => …, 'listTable' => …, 'dateTimePicker' => …, 'fileDrop' => …, 'vue' => …, 'format' => …, 'confirm' => …, 'toast' => …]` |
 | `elements` | `[]` | The application's own elements, by layout and place (below) |
 | `locale` | `null` | The language of the frame's texts when it differs from the application's |
+| `numberLocale` | `null` | The locale of numbers, money and percentages when it differs from the texts' (`fi_FI`); null follows `locale` |
 | `displayTimezone` | `'Europe/Helsinki'` | The time zone `Ui->date()` and `Ui->dateTime()` show moments in |
 
 In debug mode, the `default` and `auth` layouts prefix the title with `[DEV] `.
@@ -367,12 +368,16 @@ $this->Ui->dateTime($value);             // 26.10.2026 08.14 (in the display tim
 $this->Ui->number(1842.3, 2);            // 1 842,30 in Finnish, 1,842.30 in English
 $this->Ui->money('1842.30');             // 1 842,30 € in Finnish, €1,842.30 in English
 $this->Ui->money(7000, 'USD', 0);
+$this->Ui->percent(0.75);                // 75 % in Finnish, 75% in English (a fraction)
+$this->Ui->percent('0.0425', 1);         // 4,3 % / 4.3%
 ```
 
 A calendar day (`Cake\I18n\Date`, a `YYYY-MM-DD` string) shows as it is; a moment
 (`DateTimeInterface`, an ISO string, a Unix timestamp) shows in the `displayTimezone` setting
 (default `Europe/Helsinki`). A missing or unreadable value shows `—`, or the last argument.
-Numbers follow the `locale` setting or the application's locale.
+Numbers, money and percentages follow the `numberLocale` setting, else the `locale` setting, else
+the application's locale: an application with English texts and Finnish numbers sets
+`'numberLocale' => 'fi_FI'`.
 
 ## Vue components
 
@@ -591,6 +596,7 @@ KkFormat.formatDate('2026-10-26T22:30:00Z');      // 27.10.2026
 KkFormat.formatDateTime('2026-10-26T06:14:00Z');  // 26.10.2026 08.14
 KkFormat.formatNumber(1842.3, 2);                 // 1 842,30 in Finnish, 1,842.30 in English
 KkFormat.formatMoney('1842.30');                  // 1 842,30 € in Finnish, €1,842.30 in English
+KkFormat.formatPercent(0.75);                     // 75 % in Finnish, 75% in English
 KkFormat.formatFileSize(2516582);                 // 2.4 MB
 ```
 

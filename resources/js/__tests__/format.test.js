@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { formatDate, formatDateTime, formatNumber, formatMoney, formatFileSize } from '../format.js';
+import { formatDate, formatDateTime, formatNumber, formatMoney, formatPercent, formatFileSize } from '../format.js';
 import { resetTexts } from '../texts.js';
 
 // The expected strings are the PHP helper's (tests/TestCase/View/Helper/UiHelperTest.php).
@@ -54,6 +54,28 @@ describe('format.js', () => {
         expect(formatNumber('1842.3', 2)).toBe('1 842,30');
         expect(formatMoney('1842.30')).toBe('1 842,30 €');
         expect(formatMoney(-12.5)).toBe('−12,50 €');
+    });
+
+    it('writes percentages of a fraction in English', () => {
+        expect(formatPercent(0.75)).toBe('75%');
+        expect(formatPercent('0.0425', 1)).toBe('4.3%');
+        expect(formatPercent(12.5)).toBe('1,250%');
+        expect(formatPercent(-0.125, 1)).toBe('-12.5%');
+        expect(formatPercent(0)).toBe('0%');
+    });
+
+    it('writes percentages of a fraction in Finnish', () => {
+        document.body.innerHTML = '<script type="application/json" id="kk-ui-texts">{"numberLocale":"fi-FI"}</script>';
+        resetTexts();
+        expect(formatPercent(0.75)).toBe('75\u00a0%');
+        expect(formatPercent('0.0425', 1)).toBe('4,3\u00a0%');
+        expect(formatPercent(-0.125, 1)).toBe('\u221212,5\u00a0%');
+    });
+
+    it('shows a dash, or what it is given, for a missing percentage', () => {
+        expect(formatPercent(null)).toBe('—');
+        expect(formatPercent('abc')).toBe('—');
+        expect(formatPercent(undefined, 0, '')).toBe('');
     });
 
     it('writes file sizes', () => {

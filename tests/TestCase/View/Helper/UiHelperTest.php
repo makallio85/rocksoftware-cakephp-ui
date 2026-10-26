@@ -193,6 +193,42 @@ class UiHelperTest extends TestCase
         $this->assertSame("1\u{a0}842,30\u{a0}€", $this->ui->money('1842.30'));
     }
 
+    public function testPercentagesOfAFractionInEnglish(): void
+    {
+        $this->assertSame('75%', $this->ui->percent(0.75));
+        $this->assertSame('4.3%', $this->ui->percent('0.0425', 1));
+        $this->assertSame('1,250%', $this->ui->percent(12.5));
+        $this->assertSame('-12.5%', $this->ui->percent(-0.125, 1));
+        $this->assertSame('0%', $this->ui->percent(0));
+    }
+
+    public function testPercentagesOfAFractionInFinnish(): void
+    {
+        I18n::setLocale('fi_FI');
+
+        $this->assertSame("75\u{a0}%", $this->ui->percent(0.75));
+        $this->assertSame("4,3\u{a0}%", $this->ui->percent('0.0425', 1));
+        $this->assertSame("\u{2212}12,5\u{a0}%", $this->ui->percent(-0.125, 1));
+    }
+
+    public function testAMissingPercentageShowsTheEmptyText(): void
+    {
+        $this->assertSame('—', $this->ui->percent(null));
+        $this->assertSame('—', $this->ui->percent('abc'));
+        $this->assertSame('', $this->ui->percent('', 0, ''));
+    }
+
+    public function testTheNumberLocaleSettingKeepsTheTextsLanguage(): void
+    {
+        Configure::write('Ui.numberLocale', 'fi_FI');
+
+        $this->assertSame("1\u{a0}842,30\u{a0}€", $this->ui->money('1842.30'));
+        $this->assertSame("75\u{a0}%", $this->ui->percent(0.75));
+        $this->ui->requireComponent('format');
+        $this->assertSame('fi-FI', $this->ui->componentTexts()['numberLocale']);
+        $this->assertSame('en', substr((string)$this->ui->componentTexts()['locale'], 0, 2));
+    }
+
     public function testThePosixLocaleGroupsThousandsAsEnglish(): void
     {
         I18n::setLocale('en_US_POSIX');
