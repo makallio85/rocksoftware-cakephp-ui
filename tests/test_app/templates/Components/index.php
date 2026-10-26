@@ -5,10 +5,17 @@
  * @var \Cake\View\View $this
  * @var \Cake\Datasource\Paging\PaginatedResultSet<array-key, mixed> $messages
  * @var \TestApp\Form\DemoSettingsForm $settingsForm
+ * @var array<string, string> $filterValues
+ * @var \Cake\I18n\DateTime $sendAfter
  */
 $this->assign('title', 'Components');
-// The toasts are used on this page only, so the page asks for them.
+// The toasts and the formats are used on this page only, so the page asks
+// for them; the test application has no Vue of its own, so it takes the
+// plugin's runtime for the Vue components.
 $this->Ui->requireComponent('toast');
+$this->Ui->requireComponent('format');
+$this->Ui->requireComponent('vue');
+$this->Ui->requireComponent('listTable');
 $this->Html->script('demo', ['block' => true]);
 $this->Paginator->setTemplates(\RockSoftware\Ui\View\Helper\UiHelper::PAGINATOR_TEMPLATES);
 
@@ -114,6 +121,106 @@ $rowMenu = fn(array $row): array => [
     </div>
 </div>
 
+<section class="card mb-3" id="demo-list-table">
+    <div class="card-body">
+        <h2 class="h6 text-uppercase text-body-secondary small fw-bold">List table: server-paged, with filters and selection</h2>
+        <form id="demo-bulk-form" method="post" action="<?= h($this->Url->build(['action' => 'delete', 'selected'])) ?>">
+            <input type="hidden" name="_csrfToken" value="<?= h((string)$this->getRequest()->getAttribute('csrfToken')) ?>">
+        </form>
+        <?= $this->element('ui/list_table', [
+            'id' => 'demo-messages',
+            'results' => $messages,
+            'columns' => [
+                ['key' => 'sentAt', 'label' => 'Sent', 'sortField' => 'sent_at', 'class' => 'text-nowrap'],
+                ['key' => 'recipient', 'label' => 'Recipient', 'sortable' => false],
+                ['key' => 'application', 'label' => 'Application', 'sortable' => false],
+                ['key' => 'channel', 'label' => 'Channel', 'sortable' => false],
+                ['key' => 'status', 'label' => 'Status', 'sortable' => false, 'isHtml' => true],
+            ],
+            'rows' => array_map(fn(array $row): array => [
+                'id' => $row['id'],
+                'sentAt' => $this->Ui->dateTime($row['sent_at']),
+                'recipient' => $row['recipient'],
+                'application' => $row['application'],
+                'channel' => $row['channel'],
+                'status' => $this->Ui->badge($row['status'], $row['tone']),
+                '_actions' => $this->element('ui/kebab', ['items' => $rowMenu($row)]),
+            ], iterator_to_array($messages)),
+            'filters' => [
+                ['key' => 'q', 'label' => 'Search', 'type' => 'text', 'param' => 'q', 'placeholder' => 'Recipient'],
+                ['key' => 'status', 'label' => 'Status', 'type' => 'select', 'param' => 'status', 'options' => [
+                    ['value' => 'ok', 'label' => 'Delivered'],
+                    ['value' => 'pending', 'label' => 'Queued'],
+                    ['value' => 'danger', 'label' => 'Failed'],
+                    ['value' => 'muted', 'label' => 'Not sent'],
+                ]],
+            ],
+            'filterValues' => $filterValues,
+            'selectable' => true,
+            'selectionName' => 'ids',
+            'selectionForm' => 'demo-bulk-form',
+            'bulk' => '<span class="small text-body-secondary">Chosen messages:</span>'
+                . '<button type="submit" form="demo-bulk-form" class="btn btn-sm btn-outline-danger"'
+                . ' data-confirm="The chosen messages are deleted. This cannot be undone."'
+                . ' data-confirm-title="Delete the chosen messages?" data-confirm-button="Delete">Delete</button>',
+            'emptyText' => 'No messages match the filters.',
+        ]) ?>
+    </div>
+</section>
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-lg-6">
+        <section class="card h-100" id="demo-modal"><div class="card-body">
+            <h2 class="h6 text-uppercase text-body-secondary small fw-bold">Modal</h2>
+            <p class="small text-body-secondary">One modal: the header holds the title, the move handle and the close button. Its body is the page's own form, with the date picker and the file drop.</p>
+            <button type="button" class="btn btn-primary" data-kk-modal-open="demo-schedule" id="demo-open-modal">Schedule a message…</button>
+            <?= $this->element('ui/modal', [
+                'name' => 'demo-schedule',
+                'title' => 'Schedule a message',
+                'body' => $this->Form->create(null, ['url' => '#', 'id' => 'demo-schedule-form', 'type' => 'file'])
+                    . '<div class="mb-3">' . $this->Form->control('subject', [
+                        'class' => 'form-control', 'label' => ['class' => 'form-label', 'text' => 'Subject'],
+                        'value' => 'Opening hours over the holidays',
+                    ]) . '</div>'
+                    . '<div class="mb-3">' . $this->element('ui/date_time_picker', [
+                        'name' => 'send_at', 'id' => 'demo-send-at', 'label' => 'Send at', 'value' => $sendAfter,
+                        'help' => 'Helsinki time.',
+                    ]) . '</div>'
+                    . $this->element('ui/file_drop', [
+                        'name' => 'attachment', 'id' => 'demo-modal-attachment', 'label' => 'Attachment',
+                        'accept' => '.pdf,image/*', 'maxBytes' => 5 * 1024 * 1024, 'hint' => 'PDF or an image, at most 5 MB.',
+                    ])
+                    . $this->Form->end(),
+                'footer' => '<button type="button" class="btn btn-outline-secondary" data-kk-modal-close>Cancel</button>'
+                    . '<button type="button" class="btn btn-primary" data-kk-modal-close>Schedule</button>',
+            ]) ?>
+        </div></section>
+    </div>
+    <div class="col-12 col-lg-6">
+        <section class="card h-100" id="demo-format"><div class="card-body">
+            <h2 class="h6 text-uppercase text-body-secondary small fw-bold">The same formats in a script</h2>
+            <p class="small text-body-secondary">The PHP helper's output, and window.KkFormat's beside it.</p>
+            <table class="table table-sm small mb-0">
+                <thead><tr><th scope="col">Call</th><th scope="col">PHP</th><th scope="col">Script</th></tr></thead>
+                <tbody>
+                <tr><td>date</td><td><?= h($this->Ui->date('2026-10-26T22:30:00Z')) ?></td><td data-demo-format="date" data-value="2026-10-26T22:30:00Z"></td></tr>
+                <tr><td>dateTime</td><td><?= h($this->Ui->dateTime('2026-10-26T06:14:00Z')) ?></td><td data-demo-format="dateTime" data-value="2026-10-26T06:14:00Z"></td></tr>
+                <tr><td>number</td><td><?= h($this->Ui->number(1842.3, 2)) ?></td><td data-demo-format="number" data-value="1842.3"></td></tr>
+                <tr><td>money</td><td><?= h($this->Ui->money('1842.30')) ?></td><td data-demo-format="money" data-value="1842.30"></td></tr>
+                </tbody>
+            </table>
+        </div></section>
+    </div>
+</div>
+
+<section class="card mb-3" id="demo-vue">
+    <div class="card-body">
+        <h2 class="h6 text-uppercase text-body-secondary small fw-bold">From a script: the components in a Vue app</h2>
+        <p class="small text-body-secondary">A render function (no template compiler) using the same components: all rows in the page, sorted and filtered in the browser, paged with the pager.</p>
+        <div data-demo-vue-app></div>
+    </div>
+</section>
+
 <div class="row g-3 mb-3">
     <div class="col-12 col-lg-4">
         <section class="card h-100"><div class="card-body">
@@ -181,7 +288,7 @@ $rowMenu = fn(array $row): array => [
 
 <section class="card mb-3 kk-page-narrow">
     <div class="card-body">
-        <h2 class="h6 text-uppercase text-body-secondary small fw-bold">Form: label, help text, validation</h2>
+        <h2 class="h6 text-uppercase text-body-secondary small fw-bold">Form: label, help text, validation, date picker, file drop</h2>
         <ul class="nav nav-tabs nav-tabs-scrollable mb-3" id="demo-tabs">
             <li class="nav-item"><a class="nav-link active" aria-current="page" href="#">Sender</a></li>
             <li class="nav-item"><a class="nav-link" href="#">Delivery windows</a></li>
@@ -189,7 +296,7 @@ $rowMenu = fn(array $row): array => [
             <li class="nav-item"><a class="nav-link" href="#">Bounce handling</a></li>
             <li class="nav-item"><a class="nav-link" href="#">Audit trail</a></li>
         </ul>
-        <?= $this->Form->create($settingsForm, ['url' => '#']) ?>
+        <?= $this->Form->create($settingsForm, ['url' => '#', 'type' => 'file']) ?>
         <div class="row g-3">
             <div class="col-12 col-md-6">
                 <?= $this->Form->control('sender_name', [
@@ -199,10 +306,11 @@ $rowMenu = fn(array $row): array => [
                 ]) ?>
             </div>
             <div class="col-12 col-md-6">
-                <?= $this->Form->control('send_after', [
-                    'class' => 'form-control',
-                    'label' => ['class' => 'form-label', 'text' => 'Send after'],
-                    'help' => 'DD.MM.YYYY HH.mm, Helsinki time.',
+                <?= $this->element('ui/date_time_picker', [
+                    'name' => 'send_after',
+                    'label' => 'Send after',
+                    'value' => $sendAfter,
+                    'help' => 'Date picker: DD.MM.YYYY HH.mm, Helsinki time.',
                 ]) ?>
             </div>
             <div class="col-12 col-md-6">
@@ -210,6 +318,15 @@ $rowMenu = fn(array $row): array => [
                     'class' => 'form-control',
                     'label' => ['class' => 'form-label', 'text' => 'Reply address'],
                     'help' => 'Replies from recipients go here.',
+                ]) ?>
+            </div>
+            <div class="col-12 col-md-6">
+                <?= $this->element('ui/file_drop', [
+                    'name' => 'logo',
+                    'label' => 'Logo',
+                    'accept' => 'image/png,image/svg+xml',
+                    'maxBytes' => 1024 * 1024,
+                    'hint' => 'PNG or SVG, at most 1 MB.',
                 ]) ?>
             </div>
             <div class="col-12 col-md-6 d-flex align-items-end">

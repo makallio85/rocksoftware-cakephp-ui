@@ -55,3 +55,46 @@ jobs:
           tools: composer:v2
       - run: composer update --prefer-dist --no-progress --no-interaction
       - run: composer stan
+
+  components:
+    name: Vue components (unit tests, build output up to date)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Build, and fail when the committed output differs from the sources
+        run: |
+          npm run build
+          git status --porcelain -- webroot/
+          git diff --exit-code -- webroot/
+          test -z "$(git status --porcelain -- webroot/)"
+
+  browser:
+    name: Components page in Chromium (strict CSP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, mbstring, pdo_sqlite
+          tools: composer:v2
+      - run: composer update --prefer-dist --no-progress --no-interaction
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Serve the test application
+        run: |
+          php -S 127.0.0.1:8085 -t tests/test_app/webroot tests/test_app/webroot/index.php > /tmp/php-server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:8085/components && break; sleep 1; done
+      - run: node tests/browser/demo-page.mjs http://127.0.0.1:8085
+      - if: failure()
+        run: cat /tmp/php-server.log

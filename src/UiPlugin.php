@@ -45,8 +45,15 @@ class UiPlugin extends BasePlugin
      *   `breadcrumb` view variable), `modal` (`window.KkModal`),
      *   `listTable` (`window.KkListTable`), `confirm` (the confirmation
      *   dialog of buttons with `data-confirm`; also loaded on any page that
-     *   renders `UiHelper::postButton()` with a `confirm` message) and
-     *   `toast` (`window.appBanner`, short messages in a corner).
+     *   renders `UiHelper::postButton()` with a `confirm` message),
+     *   `toast` (`window.appBanner`, short messages in a corner),
+     *   `dateTimePicker` (`window.KkDateTimePicker`), `fileDrop`
+     *   (`window.KkFileDrop`), `format` (`window.KkFormat`, the date and
+     *   number formats in a script) and `vue` (Vue 3's runtime-only build as
+     *   `window.Vue`, for an application without Vue of its own). `modal`,
+     *   `listTable`, `dateTimePicker` and `fileDrop` are precompiled Vue
+     *   components in one script; they need `window.Vue`, the application's
+     *   or this one.
      * - `elements`: the application's own elements the layouts render, by
      *   layout (`default`, `auth`, `error`) and place: `head` (after the
      *   frame's styles), `topbarEnd` (in the top bar before the user menu,
@@ -72,6 +79,10 @@ class UiPlugin extends BasePlugin
             'listTable' => false,
             'confirm' => false,
             'toast' => false,
+            'dateTimePicker' => false,
+            'fileDrop' => false,
+            'format' => false,
+            'vue' => false,
         ],
         'elements' => [],
         'locale' => null,

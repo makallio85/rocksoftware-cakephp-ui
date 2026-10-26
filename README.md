@@ -31,10 +31,16 @@ plugin, so every application shows the same frame and none keeps its own copy.
   - `breadcrumb`: the trail of pages in the top bar, in place of the brand;
   - `modal`: `<kk-modal>`, the one modal, as `window.KkModal`;
   - `listTable`: `<kk-list-table>`, the one list table (table on desktop, cards on phones,
-    filters), as `window.KkListTable`.
+    filters, selection, a pager), as `window.KkListTable`;
+  - `dateTimePicker`: `<kk-date-time-picker>`, the one date and time picker, as
+    `window.KkDateTimePicker`;
+  - `fileDrop`: `<kk-file-drop>`, the one file input, as `window.KkFileDrop`;
+  - `vue`: Vue 3's runtime-only build as `window.Vue`, for an application without Vue of its
+    own;
+  - `format`: the date and number formats in a script, as `window.KkFormat`.
 
-  `modal` and `listTable` are Vue 3 components; the application loads Vue itself as `window.Vue`
-  and registers them (`app.component('kk-modal', window.KkModal)`).
+  `modal`, `listTable`, `dateTimePicker` and `fileDrop` are Vue 3 components, precompiled into
+  one plain script that needs no template compiler (see [Vue components](#vue-components)).
   - `confirm`: the confirmation dialog of buttons and links with `data-confirm`, and
     `window.KkConfirm.ask()`; loaded by itself on a page that renders an asking
     `Ui->postButton()`;
@@ -47,7 +53,7 @@ plugin, so every application shows the same frame and none keeps its own copy.
 
 ## Installing in an application
 
-1. **Composer.** Run `composer require makallio85/rocksoftware-cakephp-ui:^2.0`. It brings
+1. **Composer.** Run `composer require makallio85/rocksoftware-cakephp-ui:^2.1`. It brings
    `makallio85/rocksoftware-cakephp-settings`, which holds the application's name.
 2. **Plugins.** Add both to `Application::bootstrap()`:
 
@@ -150,7 +156,7 @@ Every setting has a default in `UiPlugin::DEFAULTS`.
 | `titleSuffix` | `null` | What follows the page title; null for ` · ` and `application.name` |
 | `homeUrl` | `'/'` | Where the brand and the error page's back link go |
 | `storageKeyPrefix` | `'ui'` | Prefix of the browser storage keys that keep the menu's pin and collapsed groups |
-| `components` | all `false` | `['breadcrumb' => …, 'modal' => …, 'listTable' => …, 'confirm' => …, 'toast' => …]` |
+| `components` | all `false` | `['breadcrumb' => …, 'modal' => …, 'listTable' => …, 'dateTimePicker' => …, 'fileDrop' => …, 'vue' => …, 'format' => …, 'confirm' => …, 'toast' => …]` |
 | `elements` | `[]` | The application's own elements, by layout and place (below) |
 | `locale` | `null` | The language of the frame's texts when it differs from the application's |
 | `displayTimezone` | `'Europe/Helsinki'` | The time zone `Ui->date()` and `Ui->dateTime()` show moments in |
@@ -367,6 +373,245 @@ A calendar day (`Cake\I18n\Date`, a `YYYY-MM-DD` string) shows as it is; a momen
 (`DateTimeInterface`, an ISO string, a Unix timestamp) shows in the `displayTimezone` setting
 (default `Europe/Helsinki`). A missing or unreadable value shows `—`, or the last argument.
 Numbers follow the `locale` setting or the application's locale.
+
+## Vue components
+
+`<kk-list-table>`, `<kk-modal>`, `<kk-date-time-picker>`, `<kk-file-drop>` and `<kk-pager>` are
+Vue 3 single-file components in `resources/js/components/`, built into one plain script,
+`webroot/js/components/kk-vue-components.js`, with render functions compiled ahead of time. No
+template is compiled in the browser and nothing uses `eval`, so they run under a
+Content-Security-Policy of `script-src 'self'`. The calendar (`@vuepic/vue-datepicker`) is
+bundled into that script; nothing loads from a CDN. Their styles are plain files in
+`webroot/css/` the layout loads.
+
+The script reads Vue from `window.Vue` the first time a component is used, so one copy of Vue
+serves the application and the components, and the application's Vue may load after the
+plugin's scripts. It defines `window.KkUi` (a Vue plugin that registers every component),
+`window.KkListTable`, `window.KkModal`, `window.KkDateTimePicker`, `window.KkFileDrop` and
+`window.KkPager`.
+
+### Mounting them in an application
+
+**Without Vue of its own** (server-rendered pages): switch on `vue` beside the components, and
+write the components with the plugin's elements. Each element writes plain markup with
+`data-kk-*` attributes, which the script turns into the component once the page is parsed:
+
+```php
+'components' => ['vue' => true, 'listTable' => true, 'modal' => true, 'dateTimePicker' => true, 'fileDrop' => true],
+```
+
+An element loads its own component on the page (`ui/list_table` → `listTable` and so on), so
+only `vue` has to be on. Markup a script adds later is mounted with
+`window.KkUi.mount(element)`.
+
+**With Vue loaded as a plain script** (`window.Vue`, the global build): leave `vue` off, switch
+on the components, and register them in the application's own apps:
+
+```js
+const app = Vue.createApp({ … });
+app.use(window.KkUi);              // or app.component('kk-list-table', window.KkListTable)
+app.mount('#suppliers');
+```
+
+A template written in the page's HTML (an in-DOM template) is compiled in the browser, which
+needs Vue's full build and `'unsafe-eval'`. Under a strict policy, use the elements above or
+render functions (`Vue.h(window.KkListTable, {…})`, as the components page's `demo.js` does).
+
+**With Vite** (Vue in the application's bundle): leave `vue` off and switch on the components,
+so the layout loads their styles and texts. Then either
+
+- hand the bundle's Vue to the plugin's script before the first component is used, and register
+  them:
+
+  ```js
+  import * as Vue from 'vue';
+  window.Vue = Vue;
+  createApp(Root).use(window.KkUi).mount('#app');
+  ```
+
+- or import the sources and let Vite build them into the application's bundle (the
+  application then installs `@vuepic/vue-datepicker` at the version in the plugin's
+  `package.json`):
+
+  ```js
+  import { KkUi } from '../../vendor/makallio85/rocksoftware-cakephp-ui/resources/js/index.js';
+  createApp(Root).use(KkUi).mount('#app');
+  ```
+
+Every component reads its texts from the layout's `kk-ui-texts` block (English defaults in
+`resources/js/texts.js`), so it speaks the page's language either way.
+
+### List table
+
+A sortable table on desktop, one card per row below Bootstrap `lg`, the filters above it,
+optional checkboxes with a bulk bar, and a pager. It never fetches.
+
+From PHP (no Vue of its own), a server-paged list:
+
+```php
+<?= $this->element('ui/list_table', [
+    'results' => $messages,                         // the paginated rows
+    'columns' => [
+        ['key' => 'sentAt', 'label' => 'Sent', 'sortField' => 'sent_at'],
+        ['key' => 'recipient', 'label' => 'Recipient', 'sortable' => false],
+        ['key' => 'status', 'label' => 'Status', 'sortable' => false, 'isHtml' => true],
+    ],
+    'rows' => array_map(fn($message) => [
+        'id' => $message->id,
+        'sentAt' => $this->Ui->dateTime($message->sent_at),
+        'recipient' => $message->recipient,
+        'status' => $this->Ui->badge($message->status_label, $message->tone),   // markup: isHtml
+        '_actions' => $this->element('ui/kebab', ['items' => $rowMenu($message)]),
+    ], $messages->toArray()),
+    'filters' => [
+        ['key' => 'q', 'label' => 'Search', 'type' => 'text', 'param' => 'q'],
+        ['key' => 'status', 'label' => 'Status', 'type' => 'select', 'param' => 'status',
+         'options' => [['value' => 'failed', 'label' => 'Failed']]],
+        ['key' => 'sent', 'label' => 'Sent', 'type' => 'date_range', 'paramFrom' => 'from', 'paramTo' => 'to'],
+    ],
+    'filterValues' => ['q' => $q, 'status' => $status, 'sent' => ['from' => $from, 'to' => $to]],
+    'selectable' => true,
+    'selectionName' => 'ids',                 // ticked rows post as ids[] …
+    'selectionForm' => 'bulk-form',           // … with this form
+    'bulk' => '<button type="submit" form="bulk-form" class="btn btn-sm btn-outline-danger">Delete</button>',
+]) ?>
+```
+
+With `results`, the order is the paginator's: a header click reloads the page with
+`?sort=<sortField or key>&direction=asc|desc` (allow the field in the paginator's
+`sortableFields`), the `ui/pagination` element shows under the rows, and a filter with `param`
+reloads the page with its value (a text filter on Enter or when the field is left). Without
+`results`, the rows are all on the page and are sorted and filtered in the browser: a filter
+with `matchField` compares that row field, a text filter searches the plain columns (or a row's
+`_search`). A row with `url` opens it when clicked (`rowClickable`).
+
+In a Vue app:
+
+```html
+<kk-list-table :rows="rows" :columns="columns" :filters="filters"
+               v-model:filter-values="filterValues" v-model:sort-key="sortKey" v-model:sort-asc="sortAsc"
+               selectable v-model:selected="selected" row-clickable @row-click="open"
+               is-server-sorted :pagination="{ page, perPage: 20, count }" @update:page="load">
+    <template #cell-status="{ row }"><span class="kk-badge kk-badge-ok">{{ row.status }}</span></template>
+    <template #actions="{ row }">…</template>
+    <template #bulk="{ selected }">…</template>
+    <template #pager>…a pager of your own…</template>
+</kk-list-table>
+```
+
+Props: `rows`, `rowKey`, `columns` (`key`, `label`, `sortable`, `sortValue(row)`, `class`),
+`filters` (`select` with `options` and `multiple`, `text`, `date_range`; `match(row, value)`
+filters here, none means the server's), `filterValues`, `sortKey`, `sortAsc`, `isServerSorted`,
+`pagination` (`page`, `perPage`, `count`, optional `url` with `{page}`), `selectable`,
+`selected`, `rowClickable`, `loading`, `error`, `emptyText`, `countLabel(n)`. Events: the
+`update:*` of each, `row-click`, and `filter-commit` (key, value) when a filter's value is settled.
+`<kk-pager>` is the pager alone: `page`, `perPage`, `count`, `modulus`, `url`, `showsCounter`.
+
+### Modal
+
+The one modal. The header holds the title, the move handle (desktop) and the close button, and
+nothing else; the body scrolls; the footer holds the buttons. Esc, the close button and the
+backdrop close it; on phones it fills the screen.
+
+From PHP: the body and footer are the page's own markup, so a form in it posts as usual.
+
+```php
+<?= $this->element('ui/modal', [
+    'name' => 'reject-12',
+    'title' => 'Reject the request?',
+    'body' => $this->Form->create(null, ['url' => ['action' => 'reject', 12], 'id' => 'reject-12-form'])
+        . $this->Form->control('reason') . $this->Form->end(),
+    'footer' => '<button type="button" class="btn btn-outline-secondary" data-kk-modal-close>Cancel</button>'
+        . '<button type="submit" form="reject-12-form" class="btn btn-danger">Reject</button>',
+    'size' => 'md',            // sm, md, lg, xl
+]) ?>
+<button type="button" class="btn btn-outline-danger" data-kk-modal-open="reject-12">Reject</button>
+```
+
+From a script: `window.KkUi.openModal('reject-12')`, `window.KkUi.closeModal('reject-12')`.
+In a Vue app: `<kk-modal :open="isOpen" title="…" @close="isOpen = false">…<template #footer>…</template></kk-modal>`
+(props `open`, `title`, `size`, `closable`; slots default, `title`, `tabs`, `footer`).
+
+The older `<div data-kk-modals hidden>` blocks (`kk-modal-markup.js`) still work, but their
+template is compiled in the browser: they need Vue's full build and `'unsafe-eval'`.
+
+### Date and time picker
+
+A field showing `DD.MM.YYYY HH.mm` that opens the calendar with a time list. Its value is
+wall-clock time in the display time zone (`displayTimezone`, default Europe/Helsinki):
+`Y-m-d H:i` (mode `datetime`), `Y-m-d` (`date`), `H:i` (`time`) or `Y-m` (`month`).
+
+```php
+<?= $this->element('ui/date_time_picker', [
+    'name' => 'send_after',
+    'label' => 'Send after',
+    'value' => $message->send_after,      // a moment is shown in Helsinki time
+    'help' => 'Helsinki time.',
+    'error' => $message->getError('send_after')[0] ?? null,
+    'mode' => 'datetime',                 // date, time, month
+    'timeStep' => 30, 'min' => '2026-01-01', 'max' => null,
+]) ?>
+```
+
+The form posts the value as before; read it back in the same zone:
+`new DateTime($data['send_after'], $this->Ui->displayTimezone())` (or the zone setting in a
+controller). `$this->Ui->pickerValue($moment, $mode)` turns a day or moment into the value. In a
+Vue app: `<kk-date-time-picker v-model="form.sendAfter" mode="datetime" size="sm"></kk-date-time-picker>`
+(props `mode`, `modelType`, `timeStep`, `size`, `clearable`, `min`, `max`, `inputClass`,
+`disabled`, `placeholder`, `inputId`, `ariaLabel`, `describedBy`).
+
+### File drop
+
+A dashed target to click or drop files on, the chosen files listed with their sizes; a file of
+the wrong type or too large is refused with a message.
+
+```php
+<?= $this->element('ui/file_drop', [
+    'name' => 'attachment',
+    'label' => 'Attachment',
+    'accept' => '.pdf,image/*',
+    'maxBytes' => 10 * 1024 * 1024,
+    'hint' => 'PDF or an image, at most 10 MB.',
+    'isMultiple' => false,
+]) ?>
+```
+
+The file input stays in the form (create it with `'type' => 'file'`) and holds the files
+chosen, so the form posts them as before. In a Vue app:
+`<kk-file-drop v-model="files" accept="image/*" :max-bytes="…" hint="…" @change="upload"></kk-file-drop>`
+(events `update:modelValue`, `change`, `rejected`).
+
+### Formats in a script
+
+With the `format` component on (no Vue needed), `window.KkFormat` writes what the PHP helper
+writes, in the page's number locale and display time zone:
+
+```js
+KkFormat.formatDate('2026-10-26T22:30:00Z');      // 27.10.2026
+KkFormat.formatDateTime('2026-10-26T06:14:00Z');  // 26.10.2026 08.14
+KkFormat.formatNumber(1842.3, 2);                 // 1 842,30 in Finnish, 1,842.30 in English
+KkFormat.formatMoney('1842.30');                  // 1 842,30 € in Finnish, €1,842.30 in English
+KkFormat.formatFileSize(2516582);                 // 2.4 MB
+```
+
+A string without an offset is read as UTC; a missing value shows `—` or the last argument.
+A Vite app imports the same functions from `resources/js/format.js`.
+
+### Building the components
+
+The built files in `webroot/` are committed with their sources. After changing anything in
+`resources/js/` or `resources/css/`:
+
+```bash
+npm ci
+npm test              # the components' unit tests (Vitest)
+npm run build         # writes webroot/js/components/kk-vue-components.js, kk-format.js,
+                      # vue.runtime.global.prod.js and webroot/css/kk-date-time-picker.css
+```
+
+CI builds again and fails when the output differs from what is committed, and opens the
+components page in Chromium behind the test application's strict policy
+(`tests/browser/demo-page.mjs`), failing on any console error or policy violation.
 
 ## Translations
 

@@ -7,6 +7,7 @@ use ArrayIterator;
 use Cake\Core\Configure;
 use Cake\Datasource\Paging\PaginatedResultSet;
 use Cake\Http\ServerRequest;
+use Cake\I18n\DateTime;
 use Cake\I18n\I18n;
 use Cake\Routing\Route\DashedRoute;
 use Cake\Routing\RouteBuilder;
@@ -17,8 +18,9 @@ use RockSoftware\Ui\View\Helper\UiHelper;
 use TestApp\View\AppView;
 
 /**
- * The shared elements: `ui/page_header`, `ui/kebab`, `ui/empty_state` and
- * `ui/pagination`.
+ * The shared elements: `ui/page_header`, `ui/kebab`, `ui/empty_state`,
+ * `ui/pagination`, and the Vue components' markup: `ui/modal`,
+ * `ui/date_time_picker`, `ui/file_drop` and `ui/list_table`.
  */
 class ElementsTest extends TestCase
 {
@@ -255,6 +257,127 @@ class ElementsTest extends TestCase
         $this->assertStringContainsString('Näytetään 1–4 / 47', $html);
         $this->assertStringContainsString('aria-label="Sivut"', $html);
         $this->assertStringContainsString('Seuraava sivu', $html);
+    }
+
+    public function testModalWritesItsMarkupAndLoadsTheComponent(): void
+    {
+        $html = $this->view->element('ui/modal', [
+            'name' => 'reject-12',
+            'title' => 'Reject <the> request?',
+            'body' => '<p>Body</p>',
+            'footer' => '<button type="button" data-kk-modal-close>Cancel</button>',
+            'size' => 'lg',
+        ]);
+
+        $this->assertStringContainsString('<div data-kk-modal="reject-12" data-title="Reject &lt;the&gt; request?" data-size="lg"', $html);
+        $this->assertStringContainsString('data-closable="true" hidden><p>Body</p><div data-kk-modal-footer>'
+            . '<button type="button" data-kk-modal-close>Cancel</button></div></div>', $html);
+        $this->assertTrue($this->ui()->isEnabled('modal'));
+        $this->assertFalse($this->ui()->isEnabled('vue'));
+    }
+
+    public function testModalWithoutFooterOrClose(): void
+    {
+        $html = $this->view->element('ui/modal', ['name' => 'm', 'title' => 'T', 'body' => 'B', 'isClosable' => false]);
+
+        $this->assertStringContainsString('data-closable="false"', $html);
+        $this->assertStringNotContainsString('data-kk-modal-footer', $html);
+    }
+
+    public function testDateTimePickerShowsAMomentInHelsinkiAsThePickerValue(): void
+    {
+        $html = $this->view->element('ui/date_time_picker', [
+            'name' => 'send_after',
+            'label' => 'Send after',
+            'value' => new DateTime('2026-10-27 06:00:00', 'UTC'),
+            'help' => 'Helsinki time.',
+            'error' => 'Pick a later time.',
+            'timeStep' => 15,
+            'min' => '2026-10-26',
+        ]);
+
+        $this->assertStringContainsString('<label class="form-label" for="send-after">Send after</label>', $html);
+        $this->assertStringContainsString('<input type="text" name="send_after" id="send-after" value="2026-10-27 08:00"'
+            . ' class="form-control is-invalid" data-kk-date-time-picker data-mode="datetime" data-time-step="15"'
+            . ' data-min="2026-10-26" aria-describedby="send-after-help send-after-error" autocomplete="off">', $html);
+        $this->assertStringContainsString('<div class="invalid-feedback d-block" id="send-after-error">Pick a later time.</div>', $html);
+        $this->assertStringContainsString('<div class="form-text" id="send-after-help">Helsinki time.</div>', $html);
+        $this->assertTrue($this->ui()->isEnabled('dateTimePicker'));
+    }
+
+    public function testDateTimePickerKeepsAPostedValueAsItIs(): void
+    {
+        $html = $this->view->element('ui/date_time_picker', ['name' => 'day', 'value' => '2026-10-27', 'mode' => 'date', 'isRequired' => true]);
+
+        $this->assertStringContainsString('value="2026-10-27"', $html);
+        $this->assertStringContainsString('data-mode="date"', $html);
+        $this->assertStringContainsString(' required ', $html);
+        $this->assertStringNotContainsString('<label', $html);
+    }
+
+    public function testFileDropWritesAFileInputAndLoadsTheComponent(): void
+    {
+        $html = $this->view->element('ui/file_drop', [
+            'name' => 'attachments',
+            'label' => 'Attachments',
+            'accept' => '.pdf,image/*',
+            'isMultiple' => true,
+            'maxBytes' => 1048576,
+            'hint' => 'At most 1 MB.',
+        ]);
+
+        $this->assertStringContainsString('<input type="file" name="attachments[]" id="attachments" accept=".pdf,image/*" multiple'
+            . ' data-kk-file-drop data-max-bytes="1048576" data-hint="At most 1 MB." class="form-control">', $html);
+        $this->assertTrue($this->ui()->isEnabled('fileDrop'));
+    }
+
+    public function testListTableWritesItsRowsAsJsonSafeInAScriptBlock(): void
+    {
+        $html = $this->view->element('ui/list_table', [
+            'id' => 'suppliers',
+            'columns' => [['key' => 'name', 'label' => 'Name']],
+            'rows' => [['id' => 1, 'name' => '</script><b>North</b>']],
+            'filters' => [['key' => 'name', 'label' => 'Name', 'type' => 'text']],
+            'sortKey' => 'name',
+            'selectable' => true,
+            'selectionName' => 'ids',
+            'bulk' => '<button type="submit">Delete</button>',
+        ]);
+
+        $this->assertStringContainsString('<div data-kk-list-table id="suppliers">', $html);
+        $this->assertStringNotContainsString('</script><b>', $html);
+        $this->assertStringContainsString('<div data-kk-list-table-bulk hidden><button type="submit">Delete</button></div>', $html);
+        preg_match('#<script type="application/json" data-kk-list-table-config>(.*?)</script>#s', $html, $match);
+        $config = json_decode($match[1] ?? '{}', true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('</script><b>North</b>', $config['rows'][0]['name']);
+        $this->assertSame('name', $config['sortKey']);
+        $this->assertTrue($config['selectable']);
+        $this->assertSame('ids', $config['selectionName']);
+        $this->assertArrayNotHasKey('isServerSorted', $config);
+        $this->assertTrue($this->ui()->isEnabled('listTable'));
+    }
+
+    public function testListTableOfAServerPagedListTakesTheOrderAndThePagerFromThePaginator(): void
+    {
+        $results = new PaginatedResultSet(new ArrayIterator([['id' => 1]]), [
+            'count' => 1, 'totalCount' => 9, 'perPage' => 4, 'pageCount' => 3, 'currentPage' => 2,
+            'requestedPage' => 2, 'start' => 5, 'end' => 8, 'hasPrevPage' => true, 'hasNextPage' => true,
+            'sort' => 'Messages.sent_at', 'direction' => 'desc', 'sortDefault' => false, 'directionDefault' => false,
+            'completeSort' => [], 'alias' => 'Messages', 'scope' => null, 'limit' => null,
+        ]);
+        $html = $this->view->element('ui/list_table', [
+            'results' => $results,
+            'columns' => [['key' => 'recipient', 'label' => 'To'], ['key' => 'sentAt', 'label' => 'Sent', 'sortField' => 'sent_at']],
+            'rows' => [['id' => 1, 'recipient' => 'a@example.test', 'sentAt' => '26.10.2026 08.14']],
+        ]);
+
+        preg_match('#<script type="application/json" data-kk-list-table-config>(.*?)</script>#s', $html, $match);
+        $config = json_decode($match[1] ?? '{}', true, 512, JSON_THROW_ON_ERROR);
+        $this->assertTrue($config['isServerSorted']);
+        $this->assertSame('sentAt', $config['sortKey']);
+        $this->assertFalse($config['sortAsc']);
+        $this->assertStringContainsString('<div data-kk-list-table-pager hidden><div class="kk-pagination-bar">', $html);
+        $this->assertStringContainsString('Showing 5–8 of 9', $html);
     }
 
     /**

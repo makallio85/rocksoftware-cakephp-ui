@@ -93,3 +93,33 @@ msgstr "Vahvista"
 
 msgid "Cancel"
 msgstr "Peruuta"
+
+msgid "Pick a date and time"
+msgstr "Valitse päivä ja aika"
+
+msgid "Pick a date"
+msgstr "Valitse päivä"
+
+msgid "Pick a time"
+msgstr "Valitse aika"
+
+msgid "Pick a month"
+msgstr "Valitse kuukausi"
+
+msgid "Time"
+msgstr "Aika"
+
+msgid "Clear"
+msgstr "Tyhjennä"
+
+msgid "Drop a file here or click to choose"
+msgstr "Pudota tiedosto tähän tai valitse napsauttamalla"
+
+msgid "Remove {name}"
+msgstr "Poista {name}"
+
+msgid "{name} is not a file type this field takes."
+msgstr "{name} ei ole tiedostotyyppi, jonka tämä kenttä hyväksyy."
+
+msgid "{name} is larger than {size}."
+msgstr "{name} on suurempi kuin {size}."

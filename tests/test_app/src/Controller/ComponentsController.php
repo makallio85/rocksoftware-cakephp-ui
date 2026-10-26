@@ -11,8 +11,11 @@ use TestApp\Form\DemoSettingsForm;
 
 /**
  * Every shared in-page component on one page, with fictional data: the page
- * header, a list with badges, kebabs and pagination, the confirm dialog,
- * toasts, the empty state and a form with help texts and a validation error.
+ * header, a list with badges, kebabs and pagination, the list table, the
+ * modal, the date picker, the file drop, the confirm dialog, toasts, the
+ * empty state and a form with help texts and a validation error. The list
+ * reads `q`, `status` and `direction` from the query, as a server-paged list
+ * would.
  */
 class ComponentsController extends AppController
 {
@@ -27,8 +30,17 @@ class ComponentsController extends AppController
      */
     public function index(): void
     {
-        $page = max(1, min((int)$this->request->getQuery('page', 1), (int)ceil(self::TOTAL / self::PER_PAGE)));
-        $this->set('messages', $this->messages($page));
+        $this->set('messages', $this->messages(
+            (int)$this->request->getQuery('page', 1),
+            trim((string)$this->request->getQuery('q', '')),
+            (string)$this->request->getQuery('status', ''),
+            $this->request->getQuery('direction') === 'asc',
+        ));
+        $this->set('filterValues', [
+            'q' => (string)$this->request->getQuery('q', ''),
+            'status' => (string)$this->request->getQuery('status', ''),
+        ]);
+        $this->set('sendAfter', new DateTime('2026-10-27 06:00:00', 'UTC'));
 
         $form = new DemoSettingsForm();
         $form->validate([
@@ -61,12 +73,16 @@ class ComponentsController extends AppController
     }
 
     /**
-     * One page of fictional messages, paginated as the ORM would.
+     * One page of fictional messages, filtered, sorted by the time sent and
+     * paginated as the ORM would.
      *
-     * @param int $page The page.
+     * @param int $page The page asked for.
+     * @param string $search Text the recipient contains.
+     * @param string $tone The status's tone, or '' for all.
+     * @param bool $isAscending Whether the oldest come first.
      * @return \Cake\Datasource\Paging\PaginatedResultSet<array-key, mixed>
      */
-    private function messages(int $page): PaginatedResultSet
+    private function messages(int $page, string $search = '', string $tone = '', bool $isAscending = false): PaginatedResultSet
     {
         $statuses = [
             ['Delivered', 'ok'],
@@ -75,12 +91,10 @@ class ComponentsController extends AppController
             ['Not sent', 'muted'],
         ];
         $channels = ['Email', 'SMS'];
-        $rows = [];
-        $start = ($page - 1) * self::PER_PAGE;
-        $end = min(self::TOTAL, $start + self::PER_PAGE);
+        $all = [];
         $sentAt = new DateTime('2026-10-26 06:14:00', 'UTC');
-        for ($i = $start; $i < $end; $i++) {
-            $rows[] = [
+        for ($i = 0; $i < self::TOTAL; $i++) {
+            $all[] = [
                 'id' => self::TOTAL - $i,
                 'sent_at' => $sentAt->subMinutes(37 * $i),
                 'recipient' => $i % 2 === 1 ? 'Example Person ' . ($i + 1) : 'person' . ($i + 1) . '@example.test',
@@ -90,21 +104,31 @@ class ComponentsController extends AppController
                 'tone' => $statuses[$i % 4][1],
             ];
         }
-        $pageCount = (int)ceil(self::TOTAL / self::PER_PAGE);
+        $all = array_values(array_filter($all, fn(array $row): bool => ($tone === '' || $row['tone'] === $tone)
+            && ($search === '' || stripos($row['recipient'], $search) !== false)));
+        if ($isAscending) {
+            $all = array_reverse($all);
+        }
+        $total = count($all);
+        $pageCount = max(1, (int)ceil($total / self::PER_PAGE));
+        $page = max(1, min($page, $pageCount));
+        $start = ($page - 1) * self::PER_PAGE;
+        $end = min($total, $start + self::PER_PAGE);
+        $rows = array_slice($all, $start, self::PER_PAGE);
 
         return new PaginatedResultSet(new ArrayIterator($rows), [
             'count' => count($rows),
-            'totalCount' => self::TOTAL,
+            'totalCount' => $total,
             'perPage' => self::PER_PAGE,
             'pageCount' => $pageCount,
             'currentPage' => $page,
             'requestedPage' => $page,
-            'start' => $start + 1,
+            'start' => $total > 0 ? $start + 1 : 0,
             'end' => $end,
             'hasPrevPage' => $page > 1,
             'hasNextPage' => $page < $pageCount,
             'sort' => 'sent_at',
-            'direction' => 'desc',
+            'direction' => $isAscending ? 'asc' : 'desc',
             'sortDefault' => 'sent_at',
             'directionDefault' => 'desc',
             'completeSort' => ['sent_at' => 'desc'],

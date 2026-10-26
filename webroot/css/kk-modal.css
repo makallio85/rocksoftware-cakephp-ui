@@ -135,3 +135,6 @@
 @media (max-width: 991.98px), (pointer: coarse) {
     body.kk-modal-open #app-scroll { overflow: hidden; }
 }
+
+/* A markup modal's footer (`ui/modal`): the page's buttons lay out as the footer's own. */
+.kk-modal-footer-nodes { display: contents; }

@@ -1,7 +1,11 @@
-/* <kk-list-table> — the shared list table (js/components/kk-list-table.js), an optional component. */
+/* <kk-list-table> (resources/js/components/KkListTable.vue), an optional component. */
 
 .kk-list-table-clickable {
     cursor: pointer;
+}
+
+.kk-list-table-check {
+    width: 1px;
 }
 
 .kk-list-table-picker {
@@ -17,3 +21,16 @@
     overflow-y: auto;
     min-width: 16rem;
 }
+
+/* The pager under the rows, the server's (`pager` slot) or <kk-pager>. */
+.kk-list-table .kk-pagination-bar,
+.kk-list-table-pager {
+    margin-top: .5rem;
+}
+
+.kk-list-table-pager > .kk-pagination-bar { margin-top: 0; }
+
+/* The page's own markup moved into the bulk bar keeps the bar's flex layout. */
+.kk-list-table-bulk-nodes { display: contents; }
+
+.kk-list-table-html > .kk-kebab { vertical-align: middle; }

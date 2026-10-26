@@ -37,6 +37,18 @@ class ComponentsTest extends TestCase
         UiPlugin::applyDefaults();
     }
 
+    /**
+     * The texts the layout wrote for the components' scripts.
+     *
+     * @return array<string, string>
+     */
+    private function texts(): array
+    {
+        preg_match('#<script type="application/json" id="kk-ui-texts">(.*?)</script>#s', (string)$this->_response?->getBody(), $match);
+
+        return (array)json_decode($match[1] ?? '{}', true, 512, JSON_THROW_ON_ERROR);
+    }
+
     public function testNoComponentLoadsByDefault(): void
     {
         $this->useComponents([]);
@@ -115,7 +127,7 @@ class ComponentsTest extends TestCase
         $this->get('/');
 
         $this->assertResponseContains('/rock_software/ui/css/kk-modal.css');
-        $this->assertResponseContains('/rock_software/ui/js/components/kk-modal.js');
+        $this->assertResponseContains('/rock_software/ui/js/components/kk-vue-components.js');
         $this->assertResponseContains('/rock_software/ui/js/components/kk-modal-markup.js');
         $this->assertResponseContains('<script type="application/json" id="kk-ui-texts">');
         $this->assertResponseContains('"modalClose":"Close"');
@@ -128,8 +140,14 @@ class ComponentsTest extends TestCase
         $this->get('/');
 
         $this->assertResponseContains('/rock_software/ui/css/kk-list-table.css');
-        $this->assertResponseContains('/rock_software/ui/js/components/kk-list-table.js');
+        $this->assertResponseContains('/rock_software/ui/js/components/kk-vue-components.js');
+        // Its date range filters use the date picker.
+        $this->assertResponseContains('/rock_software/ui/css/kk-date-time-picker.css');
         $this->assertResponseContains('"listAll":"All"');
+        $this->assertSame('Showing {start}–{end} of {count}', $this->texts()['pagerShowing']);
+        $this->assertSame('Time', $this->texts()['pickerTimeList']);
+        $this->assertSame('Europe/Helsinki', $this->texts()['timeZone']);
+        $this->assertResponseNotContains('vue.runtime');
         $this->assertResponseNotContains('kk-modal');
     }
 
@@ -142,6 +160,50 @@ class ComponentsTest extends TestCase
         $this->assertResponseContains('"modalClose":"Sulje"');
         $this->assertResponseContains('"listAll":"Kaikki"');
         $this->assertResponseContains('"locale":"fi"');
+        $this->assertResponseContains('"numberLocale":"fi-FI"');
+        $this->assertSame('Näytetään {start}–{end} / {count}', $this->texts()['pagerShowing']);
+        $this->assertSame('Valitse päivä', $this->texts()['pickerDate']);
+    }
+
+    public function testVueComponentsShareOneScriptLoadedOnceAfterTheRuntime(): void
+    {
+        $this->useComponents(['vue' => true, 'modal' => true, 'listTable' => true, 'dateTimePicker' => true, 'fileDrop' => true]);
+        $this->get('/');
+
+        $body = (string)$this->_response?->getBody();
+        $this->assertSame(1, substr_count($body, 'kk-vue-components.js'));
+        $this->assertSame(1, substr_count($body, 'kk-date-time-picker.css'));
+        $runtime = strpos($body, '/rock_software/ui/js/vue.runtime.global.prod.js');
+        $components = strpos($body, '/rock_software/ui/js/components/kk-vue-components.js');
+        $this->assertNotFalse($runtime);
+        $this->assertNotFalse($components);
+        $this->assertLessThan($components, $runtime);
+        $this->assertResponseContains('/rock_software/ui/css/kk-file-drop.css');
+        $this->assertResponseContains('"fileDropText":"Drop a file here or click to choose"');
+        $this->assertResponseContains('"pickerClear":"Clear"');
+    }
+
+    public function testDateTimePickerAloneLoadsItsScriptStyleAndTexts(): void
+    {
+        $this->useComponents(['dateTimePicker' => true]);
+        $this->get('/');
+
+        $this->assertResponseContains('/rock_software/ui/js/components/kk-vue-components.js');
+        $this->assertResponseContains('/rock_software/ui/css/kk-date-time-picker.css');
+        $this->assertResponseContains('"pickerDate":"Pick a date"');
+        $this->assertResponseNotContains('kk-modal-markup');
+        $this->assertResponseNotContains('kk-list-table.css');
+    }
+
+    public function testFormatLoadsWithoutVue(): void
+    {
+        $this->useComponents(['format' => true]);
+        $this->get('/');
+
+        $this->assertResponseContains('/rock_software/ui/js/kk-format.js');
+        $this->assertResponseContains('"numberLocale":"en-US"');
+        $this->assertResponseNotContains('kk-vue-components');
+        $this->assertResponseNotContains('vue.runtime');
     }
 
     public function testBreadcrumbTakesTheBrandsPlace(): void
