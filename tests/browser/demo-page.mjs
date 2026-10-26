@@ -165,9 +165,14 @@ async function run(browser, label, size) {
     await page.goto(`${base}/components/late-vue`, { waitUntil: 'networkidle' });
     await page.locator('#late-vue .kk-list-table').waitFor();
     expect(await page.locator('#late-remind-at').inputValue() === '27.10.2026 08.00', 'the date picker mounted after Vue arrived');
+    await shoot(page, '08-vue-after-parsing', label);
     await page.locator('#late-kebab-note').evaluate((button) => button.click());
     await page.locator('.kk-modal-dialog #late-modal-body').waitFor();
-    await shoot(page, '08-vue-after-parsing', label);
+    if (shots) {
+        // Shot once the modal has faded in.
+        await page.waitForTimeout(400);
+    }
+    await shoot(page, '09-vue-after-parsing-modal', label);
     await page.keyboard.press('Escape');
 
     await context.close();
