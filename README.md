@@ -2,14 +2,14 @@
 
 The shared screen frame for CakePHP 5 applications: the page layout, the top bar, the slide-out
 main menu, the user menu, the sign-in and error layouts, flash messages, styles and icons. Each
-application supplies only its name, icon, language and menu, so every application shows the same
-frame and none keeps its own copy.
+application supplies only its icon, language and menu, and its name comes from the shared settings
+plugin, so every application shows the same frame and none keeps its own copy.
 
 | | Name |
 |---|---|
 | Composer package | `makallio85/rocksoftware-cakephp-ui` |
 | CakePHP plugin, namespace | `RockSoftware/Ui`, `RockSoftware\Ui\` |
-| Settings | `Ui.*` |
+| Settings | `Ui.*`; the name from `makallio85/rocksoftware-cakephp-settings` |
 | Translation domain | `rock_software_ui` (English msgids, Finnish `.po`) |
 | Assets | `/rock_software/ui/…` (the plugin's `webroot/`) |
 
@@ -47,10 +47,16 @@ frame and none keeps its own copy.
 
 ## Installing in an application
 
-1. **Composer.** Run `composer require makallio85/rocksoftware-cakephp-ui:^1.2`. Until the package
-   is on Packagist, add the repository as a `vcs` entry under `repositories`.
-2. **Plugin.** Add `$this->addPlugin(\RockSoftware\Ui\UiPlugin::class);` to
-   `Application::bootstrap()`.
+1. **Composer.** Run `composer require makallio85/rocksoftware-cakephp-ui:^2.0`. It brings
+   `makallio85/rocksoftware-cakephp-settings`, which holds the application's name.
+2. **Plugins.** Add both to `Application::bootstrap()`:
+
+   ```php
+   $this->addPlugin(\RockSoftware\Settings\SettingsPlugin::class);
+   $this->addPlugin(\RockSoftware\Ui\UiPlugin::class);
+   ```
+
+   Install the settings plugin as its README says: its migrations, its `access` and its menu link.
 3. **Theme.** Use the plugin as the view theme, in `src/View/AppView.php`:
 
    ```php
@@ -65,17 +71,33 @@ frame and none keeps its own copy.
    the application's own copies.
 4. **Assets.** The files are served from `/rock_software/ui/…` by CakePHP's `AssetMiddleware`
    (or symlinked with `bin/cake plugin assets symlink`).
-5. **Settings.** In `config/app.php`:
+5. **Name.** The top bar, the sign-in card and every page title show the setting
+   `application.name`; the sign-in card shows `application.organization_name` under it when it is
+   not empty. Both are on the settings page (Settings › Application). Seed them in a migration of
+   the application's own, after the settings plugin's, so the first deploy shows the right name:
+
+   ```php
+   use RockSoftware\Settings\Settings;
+   use RockSoftware\Settings\SettingsPlugin;
+
+   public function up(): void
+   {
+       Settings::set(SettingsPlugin::APPLICATION_NAME, 'Example App');
+       Settings::set(SettingsPlugin::APPLICATION_ORGANIZATION_NAME, 'Example Ltd');
+   }
+   ```
+
+   In the application's tests, seed the name the same way, or with the settings plugin's fixtures
+   and `Settings::set()`.
+6. **Settings.** In `config/app.php`:
 
    ```php
    'Ui' => [
-       'appName' => 'Example App',
        'brandIcon' => 'bi bi-rocket',
-       'organizationName' => 'Example Ltd',
    ],
    ```
 
-6. **Main menu.** Implement `RockSoftware\Ui\View\MainMenuInterface` and set it as the `mainMenu`
+7. **Main menu.** Implement `RockSoftware\Ui\View\MainMenuInterface` and set it as the `mainMenu`
    view variable, usually in `AppController::beforeRender()`:
 
    ```php
@@ -122,12 +144,10 @@ Every setting has a default in `UiPlugin::DEFAULTS`.
 
 | Setting | Default | |
 |---|---|---|
-| `appName` | `'Application'` | The name in the top bar, on the sign-in card and in the page title |
 | `brandIcon` | `'bi bi-grid-1x2'` | The Bootstrap Icons class of the brand mark |
-| `organizationName` | `null` | The line under the name on the sign-in card; null for none |
 | `htmlLang` | `null` | The `<html lang>`; null takes it from the locale |
 | `bodyClass` | `null` | Classes added to `<body>` beside the frame's `kk-app` / `kk-auth` |
-| `titleSuffix` | `null` | What follows the page title; null for ` · <appName>` |
+| `titleSuffix` | `null` | What follows the page title; null for ` · ` and `application.name` |
 | `homeUrl` | `'/'` | Where the brand and the error page's back link go |
 | `storageKeyPrefix` | `'ui'` | Prefix of the browser storage keys that keep the menu's pin and collapsed groups |
 | `components` | all `false` | `['breadcrumb' => …, 'modal' => …, 'listTable' => …, 'confirm' => …, 'toast' => …]` |
@@ -172,6 +192,17 @@ In debug mode, the `default` and `auth` layouts prefix the title with `[DEV] `.
 - **Breadcrumb**: with the component on, the `breadcrumb` view variable lists the pages from the
   top down, each `['title' => …, 'url' => array|string|null]`; the last is the page itself. On
   phones only the page above shows, as a back link.
+
+### Upgrading from 1.x
+
+Version 2.0 takes the application's name and the line under it from the settings plugin. The
+settings `Ui.appName` and `Ui.organizationName` are gone; a value still set there is ignored.
+
+1. Require `makallio85/rocksoftware-cakephp-ui:^2.0`, add `SettingsPlugin` to
+   `Application::bootstrap()` and install it as its README says (migrations, `access`, menu link).
+2. Add a migration that seeds `application.name` and `application.organization_name` with
+   `Settings::set()`, as above, with the values `Ui.appName` and `Ui.organizationName` held.
+3. Remove `appName` and `organizationName` from `Ui` in `config/app.php`.
 
 ## Shared in-page pieces
 

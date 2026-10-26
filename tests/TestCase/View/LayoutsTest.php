@@ -7,6 +7,8 @@ use Cake\Core\Configure;
 use Cake\I18n\I18n;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
+use RockSoftware\Settings\Settings;
+use RockSoftware\Settings\SettingsPlugin;
 use RockSoftware\Ui\UiPlugin;
 use TestApp\View\DemoMainMenu;
 
@@ -23,7 +25,7 @@ class LayoutsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Configure::write('Ui', ['appName' => 'Demo App', 'brandIcon' => 'bi bi-rocket']);
+        Configure::write('Ui', ['brandIcon' => 'bi bi-rocket']);
         UiPlugin::applyDefaults();
         Configure::delete('TestApp');
     }
@@ -39,6 +41,8 @@ class LayoutsTest extends TestCase
         Configure::delete('TestApp');
         Configure::delete('Ui');
         UiPlugin::applyDefaults();
+        Settings::set(SettingsPlugin::APPLICATION_NAME, 'Demo App');
+        Settings::set(SettingsPlugin::APPLICATION_ORGANIZATION_NAME, '');
         parent::tearDown();
     }
 
@@ -267,7 +271,6 @@ class LayoutsTest extends TestCase
     public function testSettingsShapeTheFrame(): void
     {
         Configure::write('Ui', [
-            'appName' => 'Demo App',
             'htmlLang' => 'sv',
             'bodyClass' => 'demo-app',
             'titleSuffix' => ' | Demo',
@@ -284,7 +287,7 @@ class LayoutsTest extends TestCase
 
     public function testAuthLayoutShowsTheSignInCard(): void
     {
-        Configure::write('Ui.organizationName', 'Example Ltd');
+        Settings::set(SettingsPlugin::APPLICATION_ORGANIZATION_NAME, 'Example Ltd');
         $this->get('/dashboard/sign-in');
 
         $this->assertResponseOk();
@@ -295,6 +298,22 @@ class LayoutsTest extends TestCase
         $this->assertResponseContains('<title>[DEV] Sign in · Demo App</title>');
         $this->assertResponseNotContains('mainMenu');
         $this->assertResponseNotContains('app-chrome.js');
+    }
+
+    public function testTheNameComesFromTheSettingsAndUiAppNameIsIgnored(): void
+    {
+        Settings::set(SettingsPlugin::APPLICATION_NAME, 'Sample Portal');
+        Configure::write('Ui.appName', 'Old Name');
+        Configure::write('Ui.organizationName', 'Old Ltd');
+
+        $this->get('/');
+        $this->assertResponseContains('<span class="kk-brand-name">Sample Portal</span>');
+        $this->assertResponseContains('<title>[DEV] Dashboard · Sample Portal</title>');
+
+        $this->get('/dashboard/sign-in');
+        $this->assertResponseContains('<h1 class="h5 mt-3 mb-1">Sample Portal</h1>');
+        $this->assertResponseNotContains('Old Name');
+        $this->assertResponseNotContains('Old Ltd');
     }
 
     public function testAuthLayoutLeavesOutAnEmptyOrganizationName(): void

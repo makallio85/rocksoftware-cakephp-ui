@@ -9,6 +9,8 @@ declare(strict_types=1);
 use Cake\Core\Configure;
 use Cake\Http\Server;
 use Cake\Routing\Router;
+use RockSoftware\Settings\Settings;
+use RockSoftware\Settings\SettingsPlugin;
 use RockSoftware\Ui\UiPlugin;
 use TestApp\Application;
 
@@ -22,10 +24,9 @@ require dirname(__DIR__, 2) . '/bootstrap.php';
 // Redirects go back to the sandbox's own address.
 Configure::write('App.fullBaseUrl', 'http://' . ($_SERVER['HTTP_HOST'] ?? '127.0.0.1:8085'));
 
+Settings::set(SettingsPlugin::APPLICATION_ORGANIZATION_NAME, 'Example Ltd');
 Configure::write('Ui', [
-    'appName' => 'Demo App',
     'brandIcon' => 'bi bi-rocket',
-    'organizationName' => 'Example Ltd',
     'storageKeyPrefix' => 'demo',
     'elements' => ['default' => ['topbarEnd' => ['demo_topbar_end']]],
 ]);

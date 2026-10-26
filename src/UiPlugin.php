@@ -18,7 +18,10 @@ use Cake\I18n\Parser\PoFileParser;
  *     // src/View/AppView.php
  *     $this->setTheme('RockSoftware/Ui');
  *
- * The application supplies its name, icon, language and main menu (a
+ * The application's name and the line under it are the settings
+ * `application.name` and `application.organization_name` of the settings
+ * plugin (`RockSoftware/Settings`), which the application loads too. The
+ * application supplies its icon, language and main menu (a
  * `View\MainMenuInterface` in the `mainMenu` view variable); every setting
  * below has a default in `DEFAULTS`.
  */
@@ -28,15 +31,12 @@ class UiPlugin extends BasePlugin
      * Every setting and its default. An application overrides any of them in
      * `Configure::write('Ui', [...])` (usually `config/app.php`).
      *
-     * - `appName`: the application's name, in the top bar, on the sign-in card
-     *   and in the page title.
      * - `brandIcon`: the Bootstrap Icons class of the brand mark (`bi bi-…`).
-     * - `organizationName`: the line under the application's name on the
-     *   sign-in card; null for none.
      * - `htmlLang`: the `<html lang>`; null takes it from the locale.
      * - `bodyClass`: classes the application adds to `<body>`, beside the
      *   frame's own.
-     * - `titleSuffix`: what follows the page title; null for ` · <appName>`.
+     * - `titleSuffix`: what follows the page title; null for ` · ` and the
+     *   application's name.
      * - `homeUrl`: where the brand and the error page's back link go.
      * - `storageKeyPrefix`: the prefix of the browser storage keys that keep
      *   the menu's pin and its collapsed groups.
@@ -60,9 +60,7 @@ class UiPlugin extends BasePlugin
      * @var array<string, mixed>
      */
     public const DEFAULTS = [
-        'appName' => 'Application',
         'brandIcon' => 'bi bi-grid-1x2',
-        'organizationName' => null,
         'htmlLang' => null,
         'bodyClass' => null,
         'titleSuffix' => null,

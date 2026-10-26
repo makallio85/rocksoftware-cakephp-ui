@@ -30,7 +30,7 @@ class UiHelperTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Configure::write('Ui', ['appName' => 'Demo App']);
+        Configure::write('Ui', []);
         UiPlugin::applyDefaults();
         I18n::setLocale('en_US');
         $this->ui = new UiHelper(new AppView(new ServerRequest()));
