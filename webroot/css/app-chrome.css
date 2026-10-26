@@ -434,6 +434,65 @@ body.kk-auth { background-color: #f7f7f7; }
     --bs-btn-active-border-color: #3730a3;
 }
 
+/* Everything Bootstrap paints in its primary blue takes the accent:
+   links, tab and pill links, pagination, switches and checkboxes, focus
+   rings, active dropdown and list items, progress bars and outline buttons. */
+:root {
+    --bs-primary: var(--kk-accent);
+    --bs-primary-rgb: 79, 70, 229;
+    --bs-primary-text-emphasis: #312e81;
+    --bs-primary-bg-subtle: var(--kk-accent-tint);
+    --bs-primary-border-subtle: #c7d2fe;
+    --bs-link-color: var(--kk-accent);
+    --bs-link-color-rgb: 79, 70, 229;
+    --bs-link-hover-color: #4338ca;
+    --bs-link-hover-color-rgb: 67, 56, 202;
+    --bs-focus-ring-color: rgba(79, 70, 229, .25);
+}
+.nav-pills { --bs-nav-pills-link-active-bg: var(--kk-accent); }
+.pagination {
+    --bs-pagination-active-bg: var(--kk-accent);
+    --bs-pagination-active-border-color: var(--kk-accent);
+    --bs-pagination-focus-box-shadow: 0 0 0 .25rem rgba(79, 70, 229, .25);
+}
+.dropdown-menu { --bs-dropdown-link-active-bg: var(--kk-accent); }
+.list-group {
+    --bs-list-group-active-bg: var(--kk-accent);
+    --bs-list-group-active-border-color: var(--kk-accent);
+}
+.progress, .progress-stacked { --bs-progress-bar-bg: var(--kk-accent); }
+.btn-outline-primary {
+    --bs-btn-color: var(--kk-accent);
+    --bs-btn-border-color: var(--kk-accent);
+    --bs-btn-hover-bg: var(--kk-accent);
+    --bs-btn-hover-border-color: var(--kk-accent);
+    --bs-btn-active-bg: #4338ca;
+    --bs-btn-active-border-color: #4338ca;
+    --bs-btn-disabled-color: var(--kk-accent);
+    --bs-btn-disabled-border-color: var(--kk-accent);
+    --bs-btn-focus-shadow-rgb: 79, 70, 229;
+}
+.btn-primary { --bs-btn-focus-shadow-rgb: 79, 70, 229; }
+.form-check-input:checked {
+    background-color: var(--kk-accent);
+    border-color: var(--kk-accent);
+}
+.form-check-input[type="checkbox"]:indeterminate {
+    background-color: var(--kk-accent);
+    border-color: var(--kk-accent);
+}
+.form-check-input:focus,
+.form-control:focus,
+.form-select:focus {
+    border-color: #a5b4fc;
+    box-shadow: 0 0 0 .25rem rgba(79, 70, 229, .25);
+}
+.form-switch .form-check-input:focus:not(:checked) {
+    --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23a5b4fc'/%3e%3c/svg%3e");
+}
+.form-range::-webkit-slider-thumb { background-color: var(--kk-accent); }
+.form-range::-moz-range-thumb { background-color: var(--kk-accent); }
+
 /* honour reduced-motion */
 @media (prefers-reduced-motion: reduce) {
     .kk-icon-btn, .kk-user-btn,
