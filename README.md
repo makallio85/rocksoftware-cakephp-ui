@@ -378,6 +378,9 @@ A calendar day (`Cake\I18n\Date`, a `YYYY-MM-DD` string) shows as it is; a momen
 Numbers, money and percentages follow the `numberLocale` setting, else the `locale` setting, else
 the application's locale: an application with English texts and Finnish numbers sets
 `'numberLocale' => 'fi_FI'`.
+PHP's `intl` writes a locale only when its ICU data is installed: Alpine's `icu-libs` carries
+English alone (`icu-data-en`), so an Alpine image that shows Finnish numbers adds
+`icu-data-full`; without it they come out in English.
 
 ## Vue components
 
