@@ -83,22 +83,36 @@ class UiHelper extends Helper
     /** The styles every layout loads, from the plugin's webroot. */
     private const BASE_CSS = ['bootstrap.min', 'bootstrap-icons.min', 'app-chrome', 'kk-components'];
 
-    /** The styles of each optional component. */
+    /** The styles of each optional component; a file two components share loads once. */
     private const COMPONENT_CSS = [
         'breadcrumb' => ['kk-breadcrumb'],
         'modal' => ['kk-modal'],
-        'listTable' => ['kk-list-table'],
+        'listTable' => ['kk-list-table', 'kk-date-time-picker'],
+        'dateTimePicker' => ['kk-date-time-picker'],
+        'fileDrop' => ['kk-file-drop'],
         'confirm' => ['kk-confirm'],
         'toast' => ['kk-toast'],
     ];
 
-    /** The scripts of each optional component, after Bootstrap and the chrome. */
+    /**
+     * The scripts of each optional component, after Bootstrap and the chrome,
+     * in this order; a file two components share loads once. The Vue
+     * components are one precompiled script (`kk-vue-components`), after
+     * Vue's runtime when the plugin supplies it.
+     */
     private const COMPONENT_SCRIPTS = [
-        'modal' => ['components/kk-modal', 'components/kk-modal-markup'],
-        'listTable' => ['components/kk-list-table'],
+        'vue' => ['vue.runtime.global.prod'],
+        'modal' => ['components/kk-vue-components', 'components/kk-modal-markup'],
+        'listTable' => ['components/kk-vue-components'],
+        'dateTimePicker' => ['components/kk-vue-components'],
+        'fileDrop' => ['components/kk-vue-components'],
         'confirm' => ['components/kk-confirm'],
         'toast' => ['components/kk-toast'],
+        'format' => ['kk-format'],
     ];
+
+    /** The components whose scripts read the page's locale and time zone. */
+    private const LOCALE_COMPONENTS = ['listTable', 'dateTimePicker', 'fileDrop', 'format'];
 
     /** A day without a time: YYYY-MM-DD. */
     private const DATE_ONLY = '/^\d{4}-\d{2}-\d{2}$/';
@@ -255,7 +269,7 @@ class UiHelper extends Helper
             }
         }
 
-        return array_map(fn(string $name): string => UiPlugin::NAME . '.' . $name, $names);
+        return array_map(fn(string $name): string => UiPlugin::NAME . '.' . $name, array_values(array_unique($names)));
     }
 
     /**
@@ -276,7 +290,7 @@ class UiHelper extends Helper
             }
         }
 
-        return array_map(fn(string $name): string => UiPlugin::NAME . '.' . $name, $names);
+        return array_map(fn(string $name): string => UiPlugin::NAME . '.' . $name, array_values(array_unique($names)));
     }
 
     /**
@@ -306,8 +320,44 @@ class UiHelper extends Helper
                 'listDescending' => __d('rock_software_ui', 'Descending'),
                 'listSelectRow' => __d('rock_software_ui', 'Select row'),
                 'listSelectAll' => __d('rock_software_ui', 'Select all'),
-                'locale' => $this->htmlLang(),
+                // The pager's {start}, {end} and {count} are the script's placeholders.
+                'pagerShowing' => str_replace(
+                    ['{{start}}', '{{end}}', '{{count}}'],
+                    ['{start}', '{end}', '{count}'],
+                    __d('rock_software_ui', 'Showing {{start}}–{{end}} of {{count}}'),
+                ),
+                'pagerPrevious' => __d('rock_software_ui', 'Previous page'),
+                'pagerNext' => __d('rock_software_ui', 'Next page'),
+                'pagerPages' => __d('rock_software_ui', 'Pages'),
             ];
+        }
+        if ($this->isEnabled('listTable') || $this->isEnabled('dateTimePicker')) {
+            $texts += [
+                'pickerDateTime' => __d('rock_software_ui', 'Pick a date and time'),
+                'pickerDate' => __d('rock_software_ui', 'Pick a date'),
+                'pickerTime' => __d('rock_software_ui', 'Pick a time'),
+                'pickerMonth' => __d('rock_software_ui', 'Pick a month'),
+                'pickerTimeList' => __d('rock_software_ui', 'Time'),
+                'pickerClear' => __d('rock_software_ui', 'Clear'),
+            ];
+        }
+        if ($this->isEnabled('fileDrop')) {
+            $texts += [
+                'fileDropText' => __d('rock_software_ui', 'Drop a file here or click to choose'),
+                'fileDropRemove' => __d('rock_software_ui', 'Remove {name}'),
+                'fileDropWrongType' => __d('rock_software_ui', '{name} is not a file type this field takes.'),
+                'fileDropTooLarge' => __d('rock_software_ui', '{name} is larger than {size}.'),
+            ];
+        }
+        foreach (self::LOCALE_COMPONENTS as $component) {
+            if ($this->isEnabled($component)) {
+                $texts += [
+                    'locale' => $this->htmlLang(),
+                    'numberLocale' => str_replace('_', '-', $this->numberLocale()),
+                    'timeZone' => $this->displayTimezone(),
+                ];
+                break;
+            }
         }
         if ($this->isEnabled('confirm')) {
             $texts += [
@@ -491,6 +541,35 @@ class UiHelper extends Helper
         $text = $formatter->formatCurrency((float)$value, strtoupper($currency));
 
         return $text === false ? $empty : $text;
+    }
+
+    /**
+     * A day or moment as the date picker's value: wall-clock time in the
+     * display time zone, `Y-m-d H:i` (`datetime`), `Y-m-d` (`date`), `H:i`
+     * (`time`) or `Y-m` (`month`); '' for a missing or unreadable value. A
+     * calendar day (a `Date`, a `YYYY-MM-DD` string) is not moved between
+     * zones. The posted value is read back in the same zone:
+     * `new DateTime($posted, $this->Ui->displayTimezone())`.
+     *
+     * @param \DateTimeInterface|\Cake\Chronos\ChronosDate|string|int|null $value The day or moment.
+     * @param string $mode `datetime`, `date`, `time` or `month`.
+     * @return string
+     */
+    public function pickerValue(DateTimeInterface|ChronosDate|string|int|null $value, string $mode = 'datetime'): string
+    {
+        $formats = ['datetime' => 'Y-m-d H:i', 'date' => 'Y-m-d', 'time' => 'H:i', 'month' => 'Y-m'];
+        if (!isset($formats[$mode])) {
+            throw new InvalidArgumentException(sprintf('Unknown picker mode "%s".', $mode));
+        }
+        if ($value instanceof ChronosDate) {
+            return $mode === 'time' ? '' : $value->format($mode === 'month' ? 'Y-m' : 'Y-m-d');
+        }
+        if (is_string($value) && preg_match(self::DATE_ONLY, $value) === 1) {
+            return $mode === 'time' ? '' : ($mode === 'month' ? substr($value, 0, 7) : $value);
+        }
+        $moment = $this->moment($value);
+
+        return $moment === null ? '' : $moment->format($formats[$mode]);
     }
 
     /**

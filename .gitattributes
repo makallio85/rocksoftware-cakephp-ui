@@ -9,3 +9,7 @@
 /phpcs.xml export-ignore
 /phpstan.neon export-ignore
 /phpunit.xml.dist export-ignore
+/build export-ignore
+/package-lock.json export-ignore
+/vitest.config.js export-ignore
+/node_modules export-ignore

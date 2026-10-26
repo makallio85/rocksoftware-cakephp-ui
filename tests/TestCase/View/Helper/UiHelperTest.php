@@ -151,6 +151,23 @@ class UiHelperTest extends TestCase
         $this->assertSame('-', $this->ui->money(null, 'EUR', null, '-'));
     }
 
+    public function testPickerValueIsWallClockTimeInHelsinki(): void
+    {
+        $this->assertSame('2026-10-27 08:00', $this->ui->pickerValue(new DateTime('2026-10-27 06:00:00', 'UTC')));
+        $this->assertSame('2026-10-27', $this->ui->pickerValue(new DateTime('2026-10-26 22:30:00', 'UTC'), 'date'));
+        $this->assertSame('08:00', $this->ui->pickerValue('2026-10-27T06:00:00Z', 'time'));
+        $this->assertSame('2026-10', $this->ui->pickerValue('2026-10-27', 'month'));
+        $this->assertSame('2026-10-27', $this->ui->pickerValue(new Date('2026-10-27'), 'date'));
+        $this->assertSame('', $this->ui->pickerValue(null));
+        $this->assertSame('', $this->ui->pickerValue('not a date'));
+    }
+
+    public function testPickerValueRefusesAnUnknownMode(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->ui->pickerValue('2026-10-27', 'week');
+    }
+
     public function testNumbersAndMoneyInEnglish(): void
     {
         $this->assertSame('1,842.30', $this->ui->number('1842.3', 2));

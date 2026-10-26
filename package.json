@@ -1,0 +1,21 @@
+{
+    "name": "rocksoftware-cakephp-ui-components",
+    "private": true,
+    "description": "Builds the plugin's Vue components into webroot/ as plain, precompiled scripts.",
+    "type": "module",
+    "scripts": {
+        "build": "node build/build.mjs",
+        "test": "vitest run",
+        "check:browser": "node tests/browser/demo-page.mjs"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "5.2.4",
+        "@vue/test-utils": "2.4.11",
+        "@vuepic/vue-datepicker": "9.0.3",
+        "happy-dom": "20.10.6",
+        "playwright": "1.60.0",
+        "vite": "5.4.21",
+        "vitest": "2.1.9",
+        "vue": "3.5.43"
+    }
+}

@@ -55,6 +55,23 @@ class DemoPageTest extends TestCase
         $this->assertResponseContains('nav-tabs-scrollable');
         $this->assertResponseContains('26.10.2026 08.14');
         $this->assertResponseContains('<a class="kk-sort desc" href="/components?sort=sent_at&amp;direction=asc">');
+        // The Vue components, from markup, on the plugin's Vue runtime.
+        $this->assertResponseContains('<div data-kk-list-table id="demo-messages">');
+        $this->assertResponseContains('<div data-kk-modal="demo-schedule"');
+        $this->assertResponseContains('value="2026-10-27 08:00" class="form-control" data-kk-date-time-picker');
+        $this->assertResponseContains('data-kk-file-drop');
+        $this->assertResponseContains('/rock_software/ui/js/vue.runtime.global.prod.js');
+        $this->assertResponseContains('/rock_software/ui/js/components/kk-vue-components.js');
+        $this->assertResponseContains('/rock_software/ui/js/kk-format.js');
+    }
+
+    public function testTheListFiltersAndSortsOnTheServer(): void
+    {
+        $this->get('/components?status=danger&direction=asc');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Showing 1–4 of 12');
+        $this->assertResponseNotContains('>Delivered</span>');
     }
 
     public function testThePageWorksUnderAStrictContentSecurityPolicy(): void

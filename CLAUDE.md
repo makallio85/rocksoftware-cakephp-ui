@@ -36,3 +36,8 @@ http://127.0.0.1:8085.
    addresses or phone numbers in code, tests, docs or history. Test data is fictional
    (`*.example.test`).
 7. Do not commit `vendor/`, `composer.lock`, `tmp/` or `.phpunit.cache/`.
+8. **The Vue components are built, and the build is committed.** Their sources are
+   `resources/js/` and `resources/css/`; after changing them run `npm ci && npm test && npm run build`
+   and commit `webroot/` with them (CI fails when the build differs). No runtime templates: a
+   component that needs Vue's template compiler or `eval` does not run under the applications'
+   `script-src 'self'`.
