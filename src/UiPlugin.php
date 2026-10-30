@@ -47,6 +47,9 @@ class UiPlugin extends BasePlugin
      *   dialog of buttons with `data-confirm`; also loaded on any page that
      *   renders `UiHelper::postButton()` with a `confirm` message),
      *   `toast` (`window.appBanner`, short messages in a corner),
+     *   `expandToggle` (the show-more row of buttons with
+     *   `data-kk-expand-toggle`; also loaded on any page that renders the
+     *   `ui/expand_toggle` element),
      *   `dateTimePicker` (`window.KkDateTimePicker`), `fileDrop`
      *   (`window.KkFileDrop`), `format` (`window.KkFormat`, the date and
      *   number formats in a script) and `vue` (Vue 3's runtime-only build as
@@ -82,6 +85,7 @@ class UiPlugin extends BasePlugin
             'listTable' => false,
             'confirm' => false,
             'toast' => false,
+            'expandToggle' => false,
             'dateTimePicker' => false,
             'fileDrop' => false,
             'format' => false,

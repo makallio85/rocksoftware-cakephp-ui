@@ -304,6 +304,25 @@ $rowMenu = fn(array $row): array => [
     </div>
 </div>
 
+<div class="row g-3 mb-3"><div class="col-12 col-lg-6">
+<section class="card" id="demo-expand-toggle">
+    <div class="card-body pb-0">
+        <h2 class="h6 text-uppercase text-body-secondary small fw-bold">Expand toggle</h2>
+        <dl class="row small mb-2">
+            <dt class="col-5 text-body-secondary fw-normal">Provider</dt><dd class="col-7 mb-1">Example Gateway</dd>
+            <dt class="col-5 text-body-secondary fw-normal">Sender</dt><dd class="col-7 mb-1">Example Sender</dd>
+        </dl>
+        <dl class="row small mb-2" id="demo-expand-more" hidden>
+            <dt class="col-5 text-body-secondary fw-normal">Reply address</dt><dd class="col-7 mb-1">replies@example.test</dd>
+            <dt class="col-5 text-body-secondary fw-normal">Send after</dt><dd class="col-7 mb-1">08.00</dd>
+            <dt class="col-5 text-body-secondary fw-normal">Daily limit</dt><dd class="col-7 mb-1">500 messages</dd>
+        </dl>
+    </div>
+    <?= $this->element('ui/expand_toggle', ['target' => 'demo-expand-more']) ?>
+    <div class="card-footer bg-white small text-body-secondary" id="demo-expand-state">kk:expand-toggle: not yet dispatched</div>
+</section>
+</div></div>
+
 <section class="card mb-3 kk-page-narrow">
     <div class="card-body">
         <h2 class="h6 text-uppercase text-body-secondary small fw-bold">Form: label, help text, validation, date picker, file drop</h2>

@@ -13,13 +13,14 @@ use Cake\Routing\Route\DashedRoute;
 use Cake\Routing\RouteBuilder;
 use Cake\Routing\Router;
 use Cake\TestSuite\TestCase;
+use InvalidArgumentException;
 use RockSoftware\Ui\UiPlugin;
 use RockSoftware\Ui\View\Helper\UiHelper;
 use TestApp\View\AppView;
 
 /**
  * The shared elements: `ui/page_header`, `ui/kebab`, `ui/empty_state`,
- * `ui/pagination`, and the Vue components' markup: `ui/modal`,
+ * `ui/expand_toggle`, `ui/pagination`, and the Vue components' markup: `ui/modal`,
  * `ui/date_time_picker`, `ui/file_drop` and `ui/list_table`.
  */
 class ElementsTest extends TestCase
@@ -215,6 +216,58 @@ class ElementsTest extends TestCase
         $this->assertStringContainsString('<div class="kk-empty-state-title">Nothing &lt;here&gt;</div>', $html);
         $this->assertStringNotContainsString('kk-empty-state-text', $html);
         $this->assertStringNotContainsString('kk-empty-state-icon', $html);
+    }
+
+    public function testExpandToggleStartsClosed(): void
+    {
+        $html = $this->view->element('ui/expand_toggle', ['target' => 'provider-7-more']);
+
+        $this->assertStringContainsString(
+            '<button type="button" class="kk-expand-toggle" data-kk-expand-toggle aria-controls="provider-7-more"',
+            $html,
+        );
+        $this->assertStringContainsString('aria-expanded="false"', $html);
+        $this->assertStringContainsString('data-show-label="Show more" data-hide-label="Show less"', $html);
+        $this->assertSame(2, substr_count($html, '<span class="kk-expand-toggle__line" aria-hidden="true"></span>'));
+        $this->assertStringContainsString(
+            '<span class="kk-expand-toggle__label"><span data-kk-expand-toggle-text>Show more</span>',
+            $html,
+        );
+        $this->assertStringContainsString('<i class="bi bi-chevron-down" aria-hidden="true"></i>', $html);
+        $this->assertStringNotContainsString('onclick', $html);
+        $this->assertTrue($this->ui()->isEnabled('expandToggle'));
+    }
+
+    public function testExpandToggleStartsOpenWithItsOwnLabels(): void
+    {
+        $html = $this->view->element('ui/expand_toggle', [
+            'target' => 'details',
+            'expanded' => true,
+            'showLabel' => 'All <fields>',
+            'hideLabel' => 'Fewer fields',
+        ]);
+
+        $this->assertStringContainsString('aria-expanded="true"', $html);
+        $this->assertStringContainsString('data-show-label="All &lt;fields&gt;" data-hide-label="Fewer fields"', $html);
+        $this->assertStringContainsString('<span data-kk-expand-toggle-text>Fewer fields</span>', $html);
+        $this->assertStringContainsString('<i class="bi bi-chevron-up" aria-hidden="true"></i>', $html);
+    }
+
+    public function testExpandToggleLabelsAreTranslated(): void
+    {
+        I18n::setLocale('fi_FI');
+
+        $html = $this->view->element('ui/expand_toggle', ['target' => 'details']);
+
+        $this->assertStringContainsString('data-show-label="Näytä lisää" data-hide-label="Näytä vähemmän"', $html);
+        $this->assertStringContainsString('<span data-kk-expand-toggle-text>Näytä lisää</span>', $html);
+    }
+
+    public function testExpandToggleNeedsATarget(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->view->element('ui/expand_toggle', []);
     }
 
     public function testPaginationOnTheFirstPage(): void

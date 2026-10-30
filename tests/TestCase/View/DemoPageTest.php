@@ -50,6 +50,8 @@ class DemoPageTest extends TestCase
         $this->assertResponseContains('Showing 1–4 of 47');
         $this->assertResponseContains('data-confirm="Messages already sent stay in the log. This cannot be undone."');
         $this->assertResponseContains('<div class="kk-empty-state">');
+        $this->assertResponseContains('data-kk-expand-toggle aria-controls="demo-expand-more"');
+        $this->assertResponseContains('/rock_software/ui/js/components/kk-expand-toggle.js');
         $this->assertResponseContains('<div class="form-text" id="sender-name-help">');
         $this->assertResponseContains('<div class="invalid-feedback d-block" id="reply-address-error">');
         $this->assertResponseContains('nav-tabs-scrollable');

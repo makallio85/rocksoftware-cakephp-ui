@@ -44,11 +44,13 @@ plugin, so every application shows the same frame and none keeps its own copy.
   - `confirm`: the confirmation dialog of buttons and links with `data-confirm`, and
     `window.KkConfirm.ask()`; loaded by itself on a page that renders an asking
     `Ui->postButton()`;
-  - `toast`: `window.appBanner`, short messages in a corner.
+  - `toast`: `window.appBanner`, short messages in a corner;
+  - `expandToggle`: the show-more row of buttons with `data-kk-expand-toggle`, as
+    `window.KkExpandToggle`; loaded by itself on a page that renders `ui/expand_toggle`.
 
-  `confirm` and `toast` are plain scripts: no Vue, no build step.
+  `confirm`, `toast` and `expandToggle` are plain scripts: no Vue, no build step.
 - **Shared in-page pieces** (below): badges, the page header, the kebab menu, the confirmation,
-  pagination, toasts, the empty state, form help texts, scrolling tab strips and the date and
+  pagination, toasts, the empty state, the expand toggle, form help texts, scrolling tab strips and the date and
   number formats.
 
 ## Installing in an application
@@ -346,6 +348,39 @@ The text is set as text, never as markup.
     'action' => $this->Html->link('New message', ['action' => 'add'], ['class' => 'btn btn-primary']),  // optional
 ]) ?>
 ```
+
+### Expand toggle
+
+The row across the bottom of a compact section that shows and hides the rest of it: a thin line
+with a centred label, "Show more" with a down chevron while closed, "Show less" with an up chevron
+while open. The whole row is one button, inside the section.
+
+```php
+<dl id="provider-7-more" hidden>…</dl>   <!-- hidden while the toggle starts closed -->
+<?= $this->element('ui/expand_toggle', [
+    'target' => 'provider-7-more',       // the id of the element it shows and hides
+    'expanded' => false,                 // optional; true starts it open
+    'showLabel' => 'All settings',       // optional; default "Show more"
+    'hideLabel' => 'Fewer settings',     // optional; default "Show less"
+]) ?>
+```
+
+The element loads `kk-expand-toggle.js` on the page. A click sets the button's `aria-expanded`,
+its label and chevron and the target's `hidden`, and dispatches a bubbling `kk:expand-toggle`
+event on the button with `{ expanded }`, so an application can remember the state:
+
+```js
+document.addEventListener('kk:expand-toggle', (event) => {
+    localStorage.setItem(event.target.getAttribute('aria-controls'), String(event.detail.expanded));
+});
+window.KkExpandToggle.setExpanded(button, true);   // open one from a script, without the event
+```
+
+On load the script sets each target's `hidden` from its toggle's `aria-expanded`. Markup the
+application writes itself (`.kk-expand-toggle` with `__line` and `__label` parts, as the element
+renders it) works with the `expandToggle` component on. The line is `#e9ecef` and the label
+`#5c636a`, 12px semibold; on hover the label darkens and the line gets stronger; on phones the row
+is 44px tall.
 
 ### Form help texts and validation
 
