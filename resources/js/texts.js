@@ -37,6 +37,7 @@ export const DEFAULTS = {
     locale: 'en',
     numberLocale: 'en-US',
     timeZone: 'Europe/Helsinki',
+    storageKeyPrefix: 'ui',
 };
 
 let cache = null;

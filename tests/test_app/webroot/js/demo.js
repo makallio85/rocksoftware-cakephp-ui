@@ -110,6 +110,9 @@
                         options: [{ value: 'Email', label: 'Email' }, { value: 'SMS', label: 'SMS' }]
                     }],
                     filterValues: this.filterValues,
+                    // The channel picked is kept in this browser for this list.
+                    rememberFilters: ['channel'],
+                    listId: 'demo-providers',
                     sortKey: this.sortKey,
                     sortAsc: this.sortAsc,
                     isServerSorted: true,

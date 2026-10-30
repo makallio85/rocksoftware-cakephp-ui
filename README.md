@@ -21,6 +21,8 @@ plugin, so every application shows the same frame and none keeps its own copy.
 - **`auth` layout**: a centred card with the brand mark and the application's name, for sign-in
   pages.
 - **`error` layout**: the same card with the error and a link back to the start page.
+- **Error pages** (`Error/error400`, `Error/error500`): a short title and text by status, in the
+  page's language, inside the `error` layout (see [Error pages](#error-pages)).
 - **`ajax` layout**: the content alone, for fragments a script swaps into the page.
 - **Elements**: `topbar`, `navigation`, `breadcrumb` and `flash/*` (`default`, `success`,
   `error`, `warning`, `info`, as Bootstrap alerts).
@@ -50,7 +52,7 @@ plugin, so every application shows the same frame and none keeps its own copy.
 
   `confirm`, `toast` and `expandToggle` are plain scripts: no Vue, no build step.
 - **Shared in-page pieces** (below): badges, the page header, the kebab menu, the confirmation,
-  pagination, toasts, the empty state, the expand toggle, form help texts, scrolling tab strips and the date and
+  pagination, toasts, the empty state, the notice, the expand toggle, form help texts, scrolling tab strips and the date and
   number formats.
 
 ## Installing in an application
@@ -202,6 +204,27 @@ In debug mode, the `default` and `auth` layouts prefix the title with `[DEV] `.
   top down, each `['title' => …, 'url' => array|string|null]`; the last is the page itself. On
   phones only the page above shows, as a back link.
 
+### Error pages
+
+The plugin has `templates/Error/error400.php` and `error500.php`. Outside debug mode they render in
+the `error` layout with a short title and a line of text by status, in the page's language
+(English and Finnish, `UiHelper::errorText()`):
+
+| Status | Title |
+|---|---|
+| 404 | Page not found (Sivua ei löydy) |
+| 403 | You do not have access to this page (Sinulla ei ole oikeutta tähän sivuun) |
+| other 4xx | The request could not be handled (Pyyntöä ei voitu käsitellä) |
+| 5xx | Something went wrong (Jotain meni pieleen) |
+
+The exception's message is not shown (it stays in the log). In debug mode they keep CakePHP's
+developer page (`dev_error` layout, the file and the trace), as the application template's do.
+
+An application gets them by using the plugin as its theme (step 3 above): the theme's templates
+come before the application's, so its own `templates/Error/error400.php` and `error500.php` are
+no longer used. Delete them. The error controller must render with the themed `AppView`, which
+CakePHP's own `ErrorController` and an application's `ErrorController extends AppController` do.
+
 ### Upgrading from 1.x
 
 Version 2.0 takes the application's name and the line under it from the settings plugin. The
@@ -348,6 +371,33 @@ The text is set as text, never as markup.
     'action' => $this->Html->link('New message', ['action' => 'add'], ['class' => 'btn btn-primary']),  // optional
 ]) ?>
 ```
+
+### Notice
+
+A boxed note inside a page: what the reader should know about what the page shows, such as a
+proposal that waits for review or a draft that is out of date. For a message about something
+that just happened, use a flash message or a toast.
+
+```php
+<?= $this->element('ui/notice', [
+    'tone' => 'warning',                                    // optional; default info
+    'title' => 'The draft is out of date.',                 // optional, bold above the text
+    'text' => 'The provider changed after the draft was made.',   // escaped; or 'html' => markup
+    'icon' => 'bi bi-exclamation-triangle',                 // optional
+    'action' => $this->Html->link('Compare', ['action' => 'compare', 12],
+        ['class' => 'btn btn-sm btn-outline-secondary']),   // optional markup, right of the text
+]) ?>
+```
+
+Tones (`UiHelper::NOTICE_TONES`): the badge tones `ok`, `pending`, `danger`, `muted`, `info`,
+`tag`, and `warning`; any other throws. `warning` is solid amber, for a caution; `pending` is a
+dashed amber box, for something not settled yet (undecided, not verified); `tag` is the accent's
+indigo; `info` blue. The colours are set explicitly, as badges' are.
+
+A `danger` notice has `role="alert"`, every other `role="note"`; `role` sets another, such as
+`status` for a notice a script updates. Options: `tone`, `title`, `text` or `html` (markup the
+caller escaped, e.g. with a link), `action`, `icon`, `role`, `class`, `id`. On phones the action
+goes under the text and its buttons are 44px tall.
 
 ### Expand toggle
 
@@ -543,6 +593,20 @@ reloads the page with its value (a text filter on Enter or when the field is lef
 with `matchField` compares that row field, a text filter searches the plain columns (or a row's
 `_search`). A row with `url` opens it when clicked (`rowClickable`).
 
+Filters a person sets for themselves are kept in the browser with `rememberFilters`:
+
+```php
+'id' => 'handovers',                              // required with rememberFilters
+'rememberFilters' => ['repository', 'status'],    // filter keys
+```
+
+Each value is saved per list, under `<storageKeyPrefix>:list-filters:<id>:<filter key>` in
+`localStorage`, when it changes, and restored over `filterValues` when the page loads. A value
+that no longer fits its filter (an option that has gone) is ignored, a filter set back to all is
+forgotten, and storage that is blocked or full is ignored. Only filters narrowed in the browser
+are remembered (`matchField`, or a text filter without `param`); a server filter (`param`) is in
+the address and is not.
+
 In a Vue app:
 
 ```html
@@ -561,7 +625,10 @@ Props: `rows`, `rowKey`, `columns` (`key`, `label`, `sortable`, `sortValue(row)`
 `filters` (`select` with `options` and `multiple`, `text`, `date_range`; `match(row, value)`
 filters here, none means the server's), `filterValues`, `sortKey`, `sortAsc`, `isServerSorted`,
 `pagination` (`page`, `perPage`, `count`, optional `url` with `{page}`), `selectable`,
-`selected`, `rowClickable`, `loading`, `error`, `emptyText`, `countLabel(n)`. Events: the
+`selected`, `rowClickable`, `loading`, `error`, `emptyText`, `countLabel(n)`, `rememberFilters`
+(filter keys, as above; only filters with `match`) with `listId` (the list's id in the storage
+keys; the prefix comes from the layout's `kk-ui-texts`). Restored values are emitted as
+`update:filterValues` once the table is mounted. Events: the
 `update:*` of each, `row-click`, and `filter-commit` (key, value) when a filter's value is settled.
 `<kk-pager>` is the pager alone: `page`, `perPage`, `count`, `modulus`, `url`, `showsCounter`.
 
@@ -689,4 +756,7 @@ docker compose exec app composer stan
 ```
 
 The sandbox serves `tests/test_app` with a fictional menu and user so the frame can be looked at
-in a browser.
+in a browser. The components page is `/components`; `/no-such-page` and `/dashboard/error/403`,
+`/400` and `/500` fail on purpose. Two environment variables change the sandbox:
+`UI_LOCALE=fi` shows the frame's texts in Finnish, and `DEBUG=false` shows the error pages as
+production does instead of CakePHP's developer page.

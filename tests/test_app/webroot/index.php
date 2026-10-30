@@ -25,9 +25,15 @@ require dirname(__DIR__, 2) . '/bootstrap.php';
 Configure::write('App.fullBaseUrl', 'http://' . ($_SERVER['HTTP_HOST'] ?? '127.0.0.1:8085'));
 
 Settings::set(SettingsPlugin::APPLICATION_ORGANIZATION_NAME, 'Example Ltd');
+// UI_LOCALE=fi shows the frame's texts in Finnish; DEBUG=false shows the
+// error pages as production does instead of CakePHP's developer page.
+if (getenv('DEBUG') === 'false') {
+    Configure::write('debug', false);
+}
 Configure::write('Ui', [
     'brandIcon' => 'bi bi-rocket',
     'storageKeyPrefix' => 'demo',
+    'locale' => getenv('UI_LOCALE') ?: null,
     'elements' => ['default' => ['topbarEnd' => ['demo_topbar_end']]],
 ]);
 UiPlugin::applyDefaults();

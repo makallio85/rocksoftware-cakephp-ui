@@ -168,6 +168,87 @@ $rowMenu = fn(array $row): array => [
     </div>
 </section>
 
+<section class="card mb-3" id="demo-remembered">
+    <div class="card-body">
+        <h2 class="h6 text-uppercase text-body-secondary small fw-bold">List table: all rows on the page, filters remembered</h2>
+        <p class="small text-body-secondary">The channel and the search are kept in this browser for this list (rememberFilters) and come back after a reload.</p>
+        <?php
+        $gateways = ['North', 'South', 'East', 'West', 'Harbour', 'Hill', 'River', 'Forest'];
+        ?>
+        <?= $this->element('ui/list_table', [
+            'id' => 'demo-gateways',
+            'columns' => [
+                ['key' => 'name', 'label' => 'Provider'],
+                ['key' => 'channel', 'label' => 'Channel'],
+                ['key' => 'status', 'label' => 'Status', 'sortable' => false, 'isHtml' => true],
+            ],
+            'rows' => array_map(fn(int $i): array => [
+                'id' => $i + 1,
+                'name' => $gateways[$i] . ' Example Gateway',
+                'channel' => $i % 3 === 0 ? 'SMS' : 'Email',
+                'status' => $i % 4 === 3 ? $this->Ui->badge('Paused', 'muted') : $this->Ui->badge('Active', 'ok'),
+            ], array_keys($gateways)),
+            'filters' => [
+                ['key' => 'q', 'label' => 'Search', 'type' => 'text', 'placeholder' => 'Provider'],
+                ['key' => 'channel', 'label' => 'Channel', 'type' => 'select', 'matchField' => 'channel', 'options' => [
+                    ['value' => 'Email', 'label' => 'Email'],
+                    ['value' => 'SMS', 'label' => 'SMS'],
+                ]],
+            ],
+            'rememberFilters' => ['q', 'channel'],
+            'sortKey' => 'name',
+        ]) ?>
+    </div>
+</section>
+
+<section class="card mb-3" id="demo-notices">
+    <div class="card-body">
+        <h2 class="h6 text-uppercase text-body-secondary small fw-bold">Notices</h2>
+        <div class="d-flex flex-column gap-2">
+            <?= $this->element('ui/notice', [
+                'tone' => 'info',
+                'icon' => 'bi bi-info-circle',
+                'text' => 'A change takes effect once it is approved. Until then it waits as a proposal.',
+            ]) ?>
+            <?= $this->element('ui/notice', [
+                'tone' => 'tag',
+                'title' => 'Edited in review',
+                'html' => 'The original proposal is kept. <a href="#original">Show the change</a>.',
+            ]) ?>
+            <?= $this->element('ui/notice', [
+                'tone' => 'ok',
+                'icon' => 'bi bi-check-circle',
+                'title' => 'All messages delivered.',
+                'text' => 'The last batch went out at 08.14.',
+            ]) ?>
+            <?= $this->element('ui/notice', [
+                'tone' => 'pending',
+                'icon' => 'bi bi-hourglass-split',
+                'title' => 'Not verified.',
+                'text' => 'These are the sender\'s own claims about the state of the work. Check them before relying on them.',
+            ]) ?>
+            <?= $this->element('ui/notice', [
+                'tone' => 'warning',
+                'icon' => 'bi bi-exclamation-triangle',
+                'title' => 'The draft is out of date.',
+                'text' => 'The provider changed after the draft was made.',
+                'action' => '<a href="#compare" class="btn btn-sm btn-outline-secondary">Compare</a>',
+            ]) ?>
+            <?= $this->element('ui/notice', [
+                'tone' => 'danger',
+                'icon' => 'bi bi-x-octagon',
+                'title' => 'Sending is stopped.',
+                'text' => 'The gateway refused the last three messages.',
+                'action' => '<a href="#retry" class="btn btn-sm btn-outline-danger">Retry</a>',
+            ]) ?>
+            <?= $this->element('ui/notice', [
+                'tone' => 'muted',
+                'text' => 'Messages older than 90 days are not shown.',
+            ]) ?>
+        </div>
+    </div>
+</section>
+
 <div class="row g-3 mb-3">
     <div class="col-12 col-lg-6">
         <section class="card h-100" id="demo-modal"><div class="card-body">

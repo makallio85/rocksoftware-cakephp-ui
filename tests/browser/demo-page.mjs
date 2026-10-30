@@ -97,6 +97,29 @@ async function run(browser, label, size) {
     }
     await page.goto(`${base}/components`, { waitUntil: 'networkidle' });
 
+    // A remembered filter: picked, then still picked after a reload.
+    const remembered = page.locator('#demo-remembered');
+    const rememberedRows = isPhone ? '[data-role="cards"] .card' : 'tbody tr';
+    await remembered.locator('.kk-list-table').waitFor();
+    expect(await remembered.locator(rememberedRows).count() === 8, 'the remembered list starts with every row');
+    await remembered.locator('[data-filter="channel"] select').selectOption('SMS');
+    expect(await page.evaluate(() => window.localStorage.getItem('demo:list-filters:demo-gateways:channel')) === '"SMS"',
+        'the picked channel is kept in the browser');
+    await page.reload({ waitUntil: 'networkidle' });
+    await remembered.locator('.kk-list-table').waitFor();
+    expect(await remembered.locator('[data-filter="channel"] select').inputValue() === 'SMS', 'the channel is back after a reload');
+    expect(await remembered.locator(rememberedRows).count() === 3, 'the rows are filtered by the remembered channel');
+    await shoot(page, '01b-remembered-filter-after-reload', label, remembered);
+    await remembered.locator('[data-filter="channel"] select').selectOption('');
+    expect(await page.evaluate(() => window.localStorage.getItem('demo:list-filters:demo-gateways:channel')) === null,
+        'a filter set back to all is forgotten');
+
+    // The notices, one per tone.
+    const notices = page.locator('#demo-notices .kk-notice');
+    expect(await notices.count() === 7, 'a notice shows in every tone');
+    expect(await page.locator('#demo-notices .kk-notice-danger').getAttribute('role') === 'alert', 'a danger notice is an alert');
+    await shoot(page, '01c-notices', label, page.locator('#demo-notices'));
+
     // The modal, with the date picker and the file drop in it.
     await page.locator('#demo-open-modal').click();
     const dialog = page.locator('.kk-modal-dialog');

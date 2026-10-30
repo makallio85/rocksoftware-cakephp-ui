@@ -33,6 +33,16 @@
  *         'filterValues' => ['q' => (string)$this->request->getQuery('q')],
  *     ]) ?>
  *
+ * Filters a person sets for themselves can be kept in the browser:
+ * `rememberFilters` names them, and their values are saved per list (the
+ * keys are `<storageKeyPrefix>:list-filters:<id>:<filter key>`) and restored
+ * when the page loads, over `filterValues`. Only filters narrowed here (with
+ * `matchField`, or a text filter without `param`) are remembered; a server
+ * filter's value is in the address. It needs the list's `id`.
+ *
+ *     'id' => 'handovers',
+ *     'rememberFilters' => ['repository', 'status'],
+ *
  * A row is plain values by column key; a column with `isHtml` holds markup
  * the template escaped (a badge, a link); `_actions` is the row's actions
  * markup (a kebab); `url` makes the row open that address when clicked
@@ -56,7 +66,8 @@
  * @var string|null $bulk The bulk bar's markup, shown while rows are ticked.
  * @var bool|null $rowClickable Whether a click on a row opens its `url`.
  * @var string|null $emptyText What an empty list says.
- * @var string|null $id The wrapper's id.
+ * @var list<string>|null $rememberFilters The keys of filters whose values the browser keeps for this list.
+ * @var string|null $id The wrapper's id; also the list's id in the storage keys.
  */
 use Cake\Datasource\Paging\PaginatedInterface;
 
@@ -85,6 +96,14 @@ foreach ($optional as $key => $setting) {
     if ($setting !== null && (string)$setting !== '') {
         $config[$key] = (string)$setting;
     }
+}
+$rememberFilters = array_values(array_map('strval', $rememberFilters ?? []));
+if ($rememberFilters !== []) {
+    if (!isset($id) || (string)$id === '') {
+        throw new InvalidArgumentException('A list table that remembers filters needs an id.');
+    }
+    $config['rememberFilters'] = $rememberFilters;
+    $config['listId'] = (string)$id;
 }
 $pager = '';
 if (isset($results) && $results instanceof PaginatedInterface) {

@@ -129,3 +129,30 @@ msgstr "Näytä lisää"
 
 msgid "Show less"
 msgstr "Näytä vähemmän"
+
+msgid "Page not found"
+msgstr "Sivua ei löydy"
+
+msgid "The page does not exist or it has moved. Check the address."
+msgstr "Sivua ei ole tai se on siirretty. Tarkista osoite."
+
+msgid "You do not have access to this page"
+msgstr "Sinulla ei ole oikeutta tähän sivuun"
+
+msgid "Ask the administrator for access if you need it."
+msgstr "Pyydä oikeutta ylläpitäjältä, jos tarvitset sitä."
+
+msgid "The request could not be handled"
+msgstr "Pyyntöä ei voitu käsitellä"
+
+msgid "Go back and try again."
+msgstr "Palaa takaisin ja yritä uudelleen."
+
+msgid "Something went wrong"
+msgstr "Jotain meni pieleen"
+
+msgid "The page could not be shown. Try again in a moment."
+msgstr "Sivua ei voitu näyttää. Yritä hetken kuluttua uudelleen."
+
+msgid "Error {0}"
+msgstr "Virhe {0}"
