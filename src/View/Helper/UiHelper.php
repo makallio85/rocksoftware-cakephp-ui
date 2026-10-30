@@ -43,6 +43,16 @@ class UiHelper extends Helper
     public const BADGE_TONES = ['ok', 'pending', 'danger', 'muted', 'info', 'tag'];
 
     /**
+     * The tones a notice (`ui/notice`) comes in: the badge tones and
+     * `warning`. `pending` is drawn dashed, for something not settled yet
+     * (undecided, unverified); `warning` solid, for a caution. A `danger`
+     * notice is an `alert` to assistive technology, every other a `note`.
+     *
+     * @var list<string>
+     */
+    public const NOTICE_TONES = [...self::BADGE_TONES, 'warning'];
+
+    /**
      * Bootstrap 5 templates for CakePHP's `PaginatorHelper`: page links as
      * `.page-item` / `.page-link`, disabled ones as plain text (no inline
      * script), sort links with a caret. The `ui/pagination` element uses
@@ -295,6 +305,45 @@ class UiHelper extends Helper
     }
 
     /**
+     * What the error page (`Error/error400`, `Error/error500`) says about an
+     * HTTP status: a short title and a line of text, in the language of the
+     * page. 404 says the page is not found, 403 that there is no access, any
+     * other 4xx that the request could not be handled, and 5xx (or anything
+     * else) that something went wrong. The message of the exception is never
+     * shown: outside debug mode it is English text from CakePHP, or internal
+     * words of the application.
+     *
+     * @param int $code The status code of the response.
+     * @return array<string, string>
+     */
+    public function errorText(int $code): array
+    {
+        if ($code === 404) {
+            return [
+                'title' => __d('rock_software_ui', 'Page not found'),
+                'text' => __d('rock_software_ui', 'The page does not exist or it has moved. Check the address.'),
+            ];
+        }
+        if ($code === 403) {
+            return [
+                'title' => __d('rock_software_ui', 'You do not have access to this page'),
+                'text' => __d('rock_software_ui', 'Ask the administrator for access if you need it.'),
+            ];
+        }
+        if ($code >= 400 && $code < 500) {
+            return [
+                'title' => __d('rock_software_ui', 'The request could not be handled'),
+                'text' => __d('rock_software_ui', 'Go back and try again.'),
+            ];
+        }
+
+        return [
+            'title' => __d('rock_software_ui', 'Something went wrong'),
+            'text' => __d('rock_software_ui', 'The page could not be shown. Try again in a moment.'),
+        ];
+    }
+
+    /**
      * The texts of the optional scripted components in the current language,
      * for the `kk-ui-texts` block they read; empty when none is on.
      *
@@ -330,6 +379,8 @@ class UiHelper extends Helper
                 'pagerPrevious' => __d('rock_software_ui', 'Previous page'),
                 'pagerNext' => __d('rock_software_ui', 'Next page'),
                 'pagerPages' => __d('rock_software_ui', 'Pages'),
+                // Not a text: where a list keeps its remembered filters.
+                'storageKeyPrefix' => $this->storageKeyPrefix(),
             ];
         }
         if ($this->isEnabled('listTable') || $this->isEnabled('dateTimePicker')) {

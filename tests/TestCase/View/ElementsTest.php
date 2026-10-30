@@ -19,7 +19,7 @@ use RockSoftware\Ui\View\Helper\UiHelper;
 use TestApp\View\AppView;
 
 /**
- * The shared elements: `ui/page_header`, `ui/kebab`, `ui/empty_state`,
+ * The shared elements: `ui/page_header`, `ui/kebab`, `ui/empty_state`, `ui/notice`,
  * `ui/expand_toggle`, `ui/pagination`, and the Vue components' markup: `ui/modal`,
  * `ui/date_time_picker`, `ui/file_drop` and `ui/list_table`.
  */
@@ -451,6 +451,118 @@ class ElementsTest extends TestCase
         $this->assertFalse($config['sortAsc']);
         $this->assertStringContainsString('<div data-kk-list-table-pager hidden><div class="kk-pagination-bar">', $html);
         $this->assertStringContainsString('Showing 5–8 of 9', $html);
+    }
+
+    public function testListTableHandsTheRememberedFiltersAndTheListIdToTheComponent(): void
+    {
+        $html = $this->view->element('ui/list_table', [
+            'id' => 'gateways',
+            'columns' => [['key' => 'name', 'label' => 'Name']],
+            'rows' => [['id' => 1, 'name' => 'North']],
+            'filters' => [['key' => 'channel', 'label' => 'Channel', 'type' => 'select', 'matchField' => 'channel', 'options' => []]],
+            'rememberFilters' => ['channel'],
+        ]);
+
+        preg_match('#<script type="application/json" data-kk-list-table-config>(.*?)</script>#s', $html, $match);
+        $config = json_decode($match[1] ?? '{}', true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(['channel'], $config['rememberFilters']);
+        $this->assertSame('gateways', $config['listId']);
+    }
+
+    public function testListTableRemembersNothingByDefault(): void
+    {
+        $html = $this->view->element('ui/list_table', [
+            'id' => 'gateways',
+            'columns' => [['key' => 'name', 'label' => 'Name']],
+            'rows' => [],
+        ]);
+
+        $this->assertStringNotContainsString('rememberFilters', $html);
+        $this->assertStringNotContainsString('listId', $html);
+    }
+
+    public function testListTableThatRemembersFiltersNeedsAnId(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('needs an id');
+
+        $this->view->element('ui/list_table', [
+            'columns' => [['key' => 'name', 'label' => 'Name']],
+            'rows' => [],
+            'rememberFilters' => ['channel'],
+        ]);
+    }
+
+    public function testNotice(): void
+    {
+        $html = $this->view->element('ui/notice', [
+            'tone' => 'warning',
+            'title' => 'Out of <date>',
+            'text' => 'The entry changed after the proposal.',
+            'icon' => 'bi bi-exclamation-triangle',
+            'action' => '<a href="/compare" class="btn btn-sm btn-outline-secondary">Compare</a>',
+            'class' => 'mb-3',
+            'id' => 'stale',
+        ]);
+
+        $this->assertStringContainsString('<div class="kk-notice kk-notice-warning mb-3" role="note" id="stale">', $html);
+        $this->assertStringContainsString('<i class="kk-notice-icon bi bi-exclamation-triangle" aria-hidden="true"></i>', $html);
+        $this->assertStringContainsString('<div class="kk-notice-title">Out of &lt;date&gt;</div>', $html);
+        $this->assertStringContainsString('<div class="kk-notice-text">The entry changed after the proposal.</div>', $html);
+        $this->assertStringContainsString('<div class="kk-notice-action"><a href="/compare"', $html);
+    }
+
+    public function testNoticeIsInfoByDefaultAndTakesMarkupInHtml(): void
+    {
+        $html = $this->view->element('ui/notice', ['html' => 'Read <a href="/rules">the rules</a>.']);
+
+        $this->assertStringContainsString('<div class="kk-notice kk-notice-info" role="note">', $html);
+        $this->assertStringContainsString('<div class="kk-notice-text">Read <a href="/rules">the rules</a>.</div>', $html);
+        $this->assertStringNotContainsString('kk-notice-title', $html);
+        $this->assertStringNotContainsString('kk-notice-icon', $html);
+        $this->assertStringNotContainsString('kk-notice-action', $html);
+    }
+
+    public function testNoticeEscapesItsText(): void
+    {
+        $html = $this->view->element('ui/notice', ['text' => '<b>bold</b>']);
+
+        $this->assertStringContainsString('<div class="kk-notice-text">&lt;b&gt;bold&lt;/b&gt;</div>', $html);
+    }
+
+    public function testNoticeRolesByTone(): void
+    {
+        $this->assertStringContainsString(
+            'class="kk-notice kk-notice-danger" role="alert"',
+            $this->view->element('ui/notice', ['tone' => 'danger', 'text' => 'Stopped.']),
+        );
+        $this->assertStringContainsString(
+            'class="kk-notice kk-notice-ok" role="status"',
+            $this->view->element('ui/notice', ['tone' => 'ok', 'text' => 'Saved.', 'role' => 'status']),
+        );
+    }
+
+    public function testNoticeComesInEveryTone(): void
+    {
+        $this->assertSame([...UiHelper::BADGE_TONES, 'warning'], UiHelper::NOTICE_TONES);
+        foreach (UiHelper::NOTICE_TONES as $tone) {
+            $this->assertStringContainsString(
+                'kk-notice-' . $tone . '"',
+                $this->view->element('ui/notice', ['tone' => $tone, 'text' => 'Text.']),
+            );
+            $this->assertStringContainsString(
+                '.kk-notice-' . $tone . ' ',
+                (string)file_get_contents(dirname(__DIR__, 3) . '/webroot/css/kk-components.css'),
+            );
+        }
+    }
+
+    public function testNoticeRefusesAnUnknownTone(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unknown notice tone "success"');
+
+        $this->view->element('ui/notice', ['tone' => 'success', 'text' => 'Saved.']);
     }
 
     /**

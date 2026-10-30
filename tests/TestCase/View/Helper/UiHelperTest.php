@@ -254,6 +254,34 @@ class UiHelperTest extends TestCase
         $this->assertSame('en', substr((string)$this->ui->componentTexts()['locale'], 0, 2));
     }
 
+    public function testTheListTableReadsTheStorageKeyPrefix(): void
+    {
+        Configure::write('Ui.storageKeyPrefix', 'demo');
+        $this->ui->requireComponent('listTable');
+
+        $this->assertSame('demo', $this->ui->componentTexts()['storageKeyPrefix']);
+    }
+
+    public function testErrorTextByStatus(): void
+    {
+        $this->assertSame('Page not found', $this->ui->errorText(404)['title']);
+        $this->assertSame('You do not have access to this page', $this->ui->errorText(403)['title']);
+        $this->assertSame('The request could not be handled', $this->ui->errorText(400)['title']);
+        $this->assertSame('The request could not be handled', $this->ui->errorText(405)['title']);
+        $this->assertSame('Something went wrong', $this->ui->errorText(500)['title']);
+        $this->assertSame('Something went wrong', $this->ui->errorText(503)['title']);
+        $this->assertSame('The page could not be shown. Try again in a moment.', $this->ui->errorText(500)['text']);
+    }
+
+    public function testErrorTextInFinnish(): void
+    {
+        I18n::setLocale('fi_FI');
+
+        $this->assertSame(['title' => 'Sivua ei löydy', 'text' => 'Sivua ei ole tai se on siirretty. Tarkista osoite.'], $this->ui->errorText(404));
+        $this->assertSame('Sinulla ei ole oikeutta tähän sivuun', $this->ui->errorText(403)['title']);
+        $this->assertSame('Jotain meni pieleen', $this->ui->errorText(500)['title']);
+    }
+
     public function testThePosixLocaleGroupsThousandsAsEnglish(): void
     {
         I18n::setLocale('en_US_POSIX');

@@ -32,6 +32,11 @@ Props:
                 (<kk-pager>, the look of the PHP `ui/pagination` element)
                 shows under the rows and reports update:page, or links to
                 `url` with '{page}' replaced; the `pager` slot replaces it
+  rememberFilters  keys of filters whose values are kept in this browser, per
+                list, and restored when the page loads: only filters with
+                `match` (the server's are not remembered); needs `listId`
+  listId        the list's id in the storage keys
+                (`<storageKeyPrefix>:list-filters:<listId>:<filter key>`)
   selectable, selected (row keys)
   rowClickable  a click on a row (not on a link, button or field in it) emits row-click
   loading, error, emptyText, countLabel(n)
@@ -216,6 +221,51 @@ function defaultValue(filter) {
     return '';
 }
 
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Where a remembered filter's value is kept. */
+export function rememberKey(listId, filterKey) {
+    return `${texts().storageKeyPrefix || 'ui'}:list-filters:${listId}:${filterKey}`;
+}
+
+/**
+ * A remembered value as the filter takes it now, or undefined when it no
+ * longer fits: an option that has gone, a value of another type.
+ */
+export function rememberedValue(filter, value) {
+    if (filter.type === 'select') {
+        const options = filter.options || [];
+        const known = (v) => options.find((o) => String(o.value) === String(v));
+        if (filter.multiple) {
+            if (!Array.isArray(value)) {
+                return undefined;
+            }
+            const picked = value.map(known).filter(Boolean).map((o) => o.value);
+            return picked.length ? options.map((o) => o.value).filter((v) => picked.includes(v)) : undefined;
+        }
+        const option = known(value);
+        return option && !isEmpty(value) ? option.value : undefined;
+    }
+    if (filter.type === 'date_range') {
+        if (!value || typeof value !== 'object') {
+            return undefined;
+        }
+        const from = typeof value.from === 'string' && DAY.test(value.from) ? value.from : '';
+        const to = typeof value.to === 'string' && DAY.test(value.to) ? value.to : '';
+        return from || to ? { from, to } : undefined;
+    }
+    return typeof value === 'string' && value !== '' ? value : undefined;
+}
+
+/** Storage, or null where the browser refuses it. */
+function storage() {
+    try {
+        return typeof window !== 'undefined' && window.localStorage ? window.localStorage : null;
+    } catch (e) {
+        return null;
+    }
+}
+
 function isUnset(filter, value) {
     if (filter.type === 'select' && filter.multiple) {
         return !value || value.length === 0;
@@ -246,15 +296,19 @@ export default {
         error: { type: String, default: '' },
         emptyText: { type: String, default: () => t('listEmpty') },
         countLabel: { type: Function, default: null },
+        rememberFilters: { type: Array, default: () => [] },
+        listId: { type: String, default: '' },
     },
     emits: [
         'update:filterValues', 'update:sortKey', 'update:sortAsc', 'update:selected', 'update:page',
         'row-click', 'filter-commit',
     ],
     data() {
+        const restored = this.readRemembered();
         return {
             uid: nextUid++,
-            values: { ...this.filterValues },
+            values: { ...this.filterValues, ...restored },
+            hasRestored: Object.keys(restored).length > 0,
             currentSortKey: this.sortKey,
             currentSortAsc: this.sortAsc,
             currentSelected: this.selected.slice(),
@@ -265,6 +319,12 @@ export default {
         sortKey(value) { this.currentSortKey = value; },
         sortAsc(value) { this.currentSortAsc = value; },
         selected(value) { this.currentSelected = value.slice(); },
+    },
+    mounted() {
+        // Tell the host what was restored, so its copy of the values agrees.
+        if (this.hasRestored) {
+            this.$emit('update:filterValues', { ...this.values });
+        }
     },
     computed: {
         sortableColumns() {
@@ -310,7 +370,52 @@ export default {
         setValue(key, value) {
             const next = { ...this.values, [key]: value };
             this.values = next;
+            this.remember(key, value);
             this.$emit('update:filterValues', next);
+        },
+        /** The filters whose values this list keeps: named, filtered here, and the list has an id. */
+        rememberedFilters() {
+            if (!this.listId || !this.rememberFilters.length) {
+                return [];
+            }
+            return this.filters.filter((f) => this.rememberFilters.includes(f.key) && typeof f.match === 'function');
+        },
+        /** The values kept for this list that still fit their filters. */
+        readRemembered() {
+            const store = storage();
+            const restored = {};
+            if (!store) {
+                return restored;
+            }
+            this.rememberedFilters().forEach((filter) => {
+                try {
+                    const raw = store.getItem(rememberKey(this.listId, filter.key));
+                    const value = raw === null ? undefined : rememberedValue(filter, JSON.parse(raw));
+                    if (value !== undefined) {
+                        restored[filter.key] = value;
+                    }
+                } catch (e) {
+                    // Storage refused or the value unreadable: the filter's own value stands.
+                }
+            });
+            return restored;
+        },
+        remember(key, value) {
+            const filter = this.rememberedFilters().find((f) => f.key === key);
+            const store = filter ? storage() : null;
+            if (!store) {
+                return;
+            }
+            try {
+                const storageKey = rememberKey(this.listId, key);
+                if (isUnset(filter, value)) {
+                    store.removeItem(storageKey);
+                } else {
+                    store.setItem(storageKey, JSON.stringify(value));
+                }
+            } catch (e) {
+                // Storage full or refused: the value is not kept.
+            }
         },
         isChecked(filter, option) {
             return this.valueOf(filter).includes(option.value);

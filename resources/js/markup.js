@@ -387,6 +387,8 @@ export function mountListTable(el) {
                 selected: state.selected,
                 rowClickable: config.rowClickable === true,
                 emptyText: config.emptyText || undefined,
+                rememberFilters: config.rememberFilters || [],
+                listId: config.listId || '',
                 'onUpdate:filterValues': (values) => { state.filterValues = values; },
                 'onUpdate:sortKey': (key) => {
                     state.sortKey = key;

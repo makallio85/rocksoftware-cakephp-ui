@@ -50,6 +50,10 @@ class DemoPageTest extends TestCase
         $this->assertResponseContains('Showing 1–4 of 47');
         $this->assertResponseContains('data-confirm="Messages already sent stay in the log. This cannot be undone."');
         $this->assertResponseContains('<div class="kk-empty-state">');
+        $this->assertResponseContains('<div class="kk-notice kk-notice-pending" role="note">');
+        $this->assertResponseContains('<div class="kk-notice kk-notice-danger" role="alert">');
+        $this->assertResponseContains('<div data-kk-list-table id="demo-gateways">');
+        $this->assertResponseContains('"rememberFilters":["q","channel"],"listId":"demo-gateways"');
         $this->assertResponseContains('data-kk-expand-toggle aria-controls="demo-expand-more"');
         $this->assertResponseContains('/rock_software/ui/js/components/kk-expand-toggle.js');
         $this->assertResponseContains('<div class="form-text" id="sender-name-help">');

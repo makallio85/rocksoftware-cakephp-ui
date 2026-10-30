@@ -323,23 +323,97 @@ class LayoutsTest extends TestCase
         $this->assertResponseNotContains('text-body-secondary small');
     }
 
-    public function testErrorLayoutShowsTheErrorAndTheWayBack(): void
+    public function testErrorPageShowsTheErrorAndTheWayBack(): void
     {
-        // Debug mode shows CakePHP's developer page instead.
-        Configure::write('debug', false);
-        try {
-            $this->get('/no-such-page');
-        } finally {
-            Configure::write('debug', true);
-        }
+        $this->getAsProduction('/no-such-page');
 
         $this->assertResponseCode(404);
         $this->assertResponseContains('<body class="kk-auth">');
-        $this->assertResponseContains('Something went wrong');
-        $this->assertResponseContains('<title>Error · Demo App</title>');
+        $this->assertResponseContains('<title>Page not found · Demo App</title>');
+        $this->assertResponseContains('<p class="text-body-secondary small mb-1">Error 404</p>');
+        $this->assertResponseContains('<h1 class="h5">Page not found</h1>');
+        $this->assertResponseContains('The page does not exist or it has moved. Check the address.');
         $this->assertResponseContains('<a href="/" class="btn btn-outline-secondary btn-sm">');
         $this->assertResponseContains('Back to the dashboard');
+        $this->assertResponseNotContains('Not Found');
         $this->assertResponseNotContains('mainMenu');
+    }
+
+    public function testErrorPagesInFinnish(): void
+    {
+        I18n::setLocale('fi_FI');
+
+        $this->getAsProduction('/no-such-page');
+        $this->assertResponseCode(404);
+        $this->assertResponseContains('<html lang="fi">');
+        $this->assertResponseContains('<title>Sivua ei löydy · Demo App</title>');
+        $this->assertResponseContains('Virhe 404');
+        $this->assertResponseContains('Sivua ei ole tai se on siirretty. Tarkista osoite.');
+
+        $this->getAsProduction('/dashboard/error/403');
+        $this->assertResponseCode(403);
+        $this->assertResponseContains('<h1 class="h5">Sinulla ei ole oikeutta tähän sivuun</h1>');
+
+        $this->getAsProduction('/dashboard/error/500');
+        $this->assertResponseCode(500);
+        $this->assertResponseContains('<h1 class="h5">Jotain meni pieleen</h1>');
+        $this->assertResponseContains('Takaisin');
+    }
+
+    public function testErrorPageTitleByStatus(): void
+    {
+        $this->getAsProduction('/dashboard/error/403');
+        $this->assertResponseCode(403);
+        $this->assertResponseContains('<h1 class="h5">You do not have access to this page</h1>');
+        $this->assertResponseContains('Error 403');
+
+        $this->getAsProduction('/dashboard/error/400');
+        $this->assertResponseCode(400);
+        $this->assertResponseContains('<h1 class="h5">The request could not be handled</h1>');
+
+        $this->getAsProduction('/dashboard/error/500');
+        $this->assertResponseCode(500);
+        $this->assertResponseContains('<body class="kk-auth">');
+        $this->assertResponseContains('<h1 class="h5">Something went wrong</h1>');
+        $this->assertResponseContains('Error 500');
+        // The exception's message stays in the log.
+        $this->assertResponseNotContains('A demo failure.');
+        $this->assertResponseNotContains('An Internal Error Has Occurred.');
+    }
+
+    public function testTheThemesErrorPagesComeBeforeTheApplications(): void
+    {
+        $own = dirname(__DIR__, 2) . '/test_app/templates/Error/error400.php';
+        $this->assertFileDoesNotExist($own);
+        mkdir(dirname($own), 0777, true);
+        file_put_contents($own, '<p>The application\'s own error page</p>');
+        try {
+            $this->getAsProduction('/no-such-page');
+        } finally {
+            unlink($own);
+            rmdir(dirname($own));
+        }
+
+        $this->assertResponseCode(404);
+        $this->assertResponseContains('<h1 class="h5">Page not found</h1>');
+        $this->assertResponseNotContains('own error page');
+    }
+
+    public function testDebugModeKeepsCakesDeveloperPage(): void
+    {
+        $this->get('/dashboard/error/403');
+
+        $this->assertResponseCode(403);
+        $this->assertResponseNotContains('<body class="kk-auth">');
+        $this->assertResponseContains('Error: Forbidden');
+        $this->assertResponseContains('error400.php');
+
+        $this->get('/dashboard/error/500');
+        $this->assertResponseCode(500);
+        $this->assertResponseNotContains('<body class="kk-auth">');
+        $this->assertResponseContains('A demo failure.');
+        // Not the frame's page (the trace quotes this file's source, so no text of it is looked for).
+        $this->assertResponseNotContains('<h1 class="h5">');
     }
 
     public function testAjaxLayoutRendersTheContentAlone(): void
@@ -373,6 +447,22 @@ class LayoutsTest extends TestCase
         $this->get('/');
 
         $this->assertResponseContains('aria-label="Avaa valikko"');
+    }
+
+    /**
+     * A GET with debug off, as production shows errors.
+     *
+     * @param string $url The address.
+     * @return void
+     */
+    private function getAsProduction(string $url): void
+    {
+        Configure::write('debug', false);
+        try {
+            $this->get($url);
+        } finally {
+            Configure::write('debug', true);
+        }
     }
 
     /**
