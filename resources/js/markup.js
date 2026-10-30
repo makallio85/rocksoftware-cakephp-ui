@@ -307,7 +307,10 @@ export const navigation = {
 export function mountListTable(el) {
     const configEl = el.querySelector(':scope > script[data-kk-list-table-config]');
     const config = configEl ? JSON.parse(configEl.textContent || '{}') : {};
-    const columns = config.columns || [];
+    // A column with `sortField` sorts by that row field (a plain value), not by its shown cell.
+    const columns = (config.columns || []).map((column) => (column.sortField
+        ? { ...column, sortValue: (row) => row[column.sortField] }
+        : column));
     const filters = (config.filters || []).map((filter) => {
         const out = { ...filter };
         if (filter.matchField || (filter.type === 'text' && !filter.param)) {
