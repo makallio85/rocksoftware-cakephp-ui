@@ -1,6 +1,7 @@
 /*
  * The shared in-page pieces, loaded by every layout: badges, the page header,
- * the kebab, the empty state, the pagination bar and scrolling tab strips.
+ * the kebab, the empty state, the expand toggle, the pagination bar and
+ * scrolling tab strips.
  * Colours are set explicitly: Bootstrap's text-bg-* helpers do not render in
  * this theme.
  */
@@ -82,6 +83,48 @@
 .kk-empty-state-text { font-size: .8125rem; }
 .kk-empty-state-action { margin-top: .75rem; }
 
+/* ----------------------------------------------------------- expand toggle */
+/* A hairline across the bottom of a compact section, broken by a centred
+   label; the whole row is the button. */
+.kk-expand-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 0;
+    padding: 0 12px 6px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #5c636a;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+    cursor: pointer;
+}
+.kk-expand-toggle__line {
+    flex: 1;
+    height: 1px;
+    background: #e9ecef;
+    transition: background-color .15s ease;
+}
+.kk-expand-toggle__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    transition: color .15s ease;
+}
+.kk-expand-toggle:focus-visible { color: #212529; }
+.kk-expand-toggle:focus-visible .kk-expand-toggle__line { background: #adb5bd; }
+/* Inside the row: the toggle is as wide as its section. */
+.kk-expand-toggle:focus-visible { outline: 2px solid var(--kk-accent, #4f46e5); outline-offset: -2px; }
+/* Hover only where there is one, so a tap on a phone leaves no dark line behind. */
+@media (hover: hover) {
+    .kk-expand-toggle:hover { color: #212529; }
+    .kk-expand-toggle:hover .kk-expand-toggle__line { background: #adb5bd; }
+}
+
 /* -------------------------------------------------------------- pagination */
 .kk-pagination-bar {
     display: flex;
@@ -143,6 +186,8 @@ a.kk-sort i { margin-left: .25rem; font-size: .7em; }
     .kk-page-header-actions { flex-wrap: nowrap; }
     .kk-page-header-actions .btn { min-width: 44px; min-height: 44px; justify-content: center; }
     .kk-page-header-label { display: none; }
+    /* A finger-sized target. */
+    .kk-expand-toggle { min-height: 44px; padding-bottom: 0; }
     .kk-pagination-bar { justify-content: center; }
     .kk-pagination-counter { width: 100%; text-align: center; }
     .kk-pagination-bar > nav { margin-left: 0; }

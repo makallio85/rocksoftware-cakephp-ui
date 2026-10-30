@@ -60,6 +60,7 @@ class ComponentsTest extends TestCase
         $this->assertResponseNotContains('kk-ui-texts');
         $this->assertResponseNotContains('kk-confirm');
         $this->assertResponseNotContains('kk-toast');
+        $this->assertResponseNotContains('kk-expand-toggle');
         $this->assertResponseContains('class="kk-brand"');
     }
 
@@ -107,6 +108,26 @@ class ComponentsTest extends TestCase
         $this->assertResponseContains('"confirmButton":"Vahvista"');
         $this->assertResponseContains('"confirmCancel":"Peruuta"');
         $this->assertResponseContains('"toastClose":"Sulje"');
+    }
+
+    public function testExpandToggleLoadsItsScriptAndTexts(): void
+    {
+        $this->useComponents(['expandToggle' => true]);
+        $this->get('/');
+
+        $this->assertResponseContains('/rock_software/ui/js/components/kk-expand-toggle.js');
+        $this->assertSame('Show more', $this->texts()['expandToggleShow'] ?? null);
+        $this->assertSame('Show less', $this->texts()['expandToggleHide'] ?? null);
+    }
+
+    public function testExpandToggleTextsInFinnish(): void
+    {
+        I18n::setLocale('fi_FI');
+        $this->useComponents(['expandToggle' => true]);
+        $this->get('/');
+
+        $this->assertSame('Näytä lisää', $this->texts()['expandToggleShow'] ?? null);
+        $this->assertSame('Näytä vähemmän', $this->texts()['expandToggleHide'] ?? null);
     }
 
     public function testAPageWithAnAskingPostButtonLoadsConfirmItself(): void

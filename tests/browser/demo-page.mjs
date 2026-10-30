@@ -160,6 +160,20 @@ async function run(browser, label, size) {
     await shoot(page, '07-formats', label, page.locator('#demo-format'));
     expect((await page.locator('#demo-format').innerText()).indexOf('-0') === -1, 'no format shows a minus zero');
 
+    // The expand toggle: closed, open, closed again; the event reaches the page.
+    const expand = page.locator('#demo-expand-toggle');
+    const toggle = expand.locator('.kk-expand-toggle');
+    expect(await expand.locator('#demo-expand-more').isHidden(), 'the expand toggle starts closed');
+    await shoot(page, '07b-expand-closed', label, expand);
+    await toggle.click();
+    await expand.locator('#demo-expand-more').waitFor();
+    expect(await toggle.getAttribute('aria-expanded') === 'true', 'the expand toggle opens');
+    expect((await toggle.innerText()).includes('Show less'), 'the open toggle says Show less');
+    expect((await expand.locator('#demo-expand-state').innerText()).includes('expanded = true'), 'kk:expand-toggle reaches the page');
+    await shoot(page, '07c-expand-open', label, expand);
+    await toggle.click();
+    expect(await expand.locator('#demo-expand-more').isHidden(), 'the expand toggle closes again');
+
     // Vue after parsing (a deferred script, as a Vite bundle sets it): the
     // markup still mounts.
     await page.goto(`${base}/components/late-vue`, { waitUntil: 'networkidle' });

@@ -108,6 +108,7 @@ class UiHelper extends Helper
         'fileDrop' => ['components/kk-vue-components'],
         'confirm' => ['components/kk-confirm'],
         'toast' => ['components/kk-toast'],
+        'expandToggle' => ['components/kk-expand-toggle'],
         'format' => ['kk-format'],
     ];
 
@@ -369,6 +370,12 @@ class UiHelper extends Helper
         if ($this->isEnabled('toast')) {
             $texts += [
                 'toastClose' => __d('rock_software_ui', 'Close'),
+            ];
+        }
+        if ($this->isEnabled('expandToggle')) {
+            $texts += [
+                'expandToggleShow' => __d('rock_software_ui', 'Show more'),
+                'expandToggleHide' => __d('rock_software_ui', 'Show less'),
             ];
         }
 

@@ -1,9 +1,16 @@
 /**
  * The components page's buttons that show toasts and ask a script's
- * question (window.KkConfirm.ask).
+ * question (window.KkConfirm.ask), and the expand toggle's event.
  */
 (function () {
     'use strict';
+
+    document.addEventListener('kk:expand-toggle', function (event) {
+        var state = document.getElementById('demo-expand-state');
+        if (state) {
+            state.textContent = 'kk:expand-toggle: expanded = ' + event.detail.expanded;
+        }
+    });
 
     document.addEventListener('click', function (event) {
         var button = event.target instanceof Element ? event.target.closest('[data-demo-toast]') : null;
