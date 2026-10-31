@@ -1,6 +1,6 @@
 <?php
 /**
- * A kebab menu (⋮): the actions on a row or a page, as a Bootstrap dropdown
+ * A kebab menu (⋯): the actions on a row or a page, as a Bootstrap dropdown
  * aligned to the right. Nothing renders when no item is left.
  *
  *     <?= $this->element('ui/kebab', ['items' => [
@@ -39,7 +39,8 @@ if ($hasAction === []) {
     return;
 }
 $label = isset($label) && is_string($label) && $label !== '' ? $label : __d('rock_software_ui', 'Actions');
-$buttonClass = 'btn btn-outline-secondary kk-kebab-toggle' . (($size ?? 'sm') === 'sm' ? ' btn-sm' : '');
+// A ghost button (kk-components.css); `md` is a little larger, for a page header.
+$buttonClass = 'btn kk-kebab-toggle' . (($size ?? 'sm') === 'sm' ? '' : ' kk-kebab-toggle-md');
 $icon = function (array $item): string {
     return isset($item['icon']) ? '<i class="' . h((string)$item['icon']) . '" aria-hidden="true"></i> ' : '';
 };
@@ -60,7 +61,7 @@ $postItem = function (array $item, string $title, string $class): string {
 <div class="dropdown kk-kebab">
     <button type="button" class="<?= h($buttonClass) ?>" data-bs-toggle="dropdown" aria-expanded="false"
             aria-label="<?= h($label) ?>" title="<?= h($label) ?>">
-        <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+        <i class="bi bi-three-dots" aria-hidden="true"></i>
     </button>
     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
         <?php foreach ($items as $item) : ?>

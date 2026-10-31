@@ -60,8 +60,50 @@
 .kk-page-header-actions .btn { display: inline-flex; align-items: center; gap: 6px; }
 
 /* ------------------------------------------------------------------- kebab */
+/* A ghost button with horizontal dots (⋯): a grey icon with no border or
+   background, a light background on hover and while the menu is open, an
+   outline on keyboard focus. `ui/kebab` draws it with `.kk-kebab-toggle` and
+   the bi-three-dots icon; any other kebab (whose content is the
+   bi-three-dots-vertical icon) gets the same look, its icon turned a quarter
+   so it reads ⋯ too. */
 .kk-kebab { display: inline-block; }
-.kk-kebab-toggle { display: inline-flex; align-items: center; justify-content: center; }
+.kk-kebab-toggle,
+.btn:has(> .bi-three-dots-vertical) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .25rem;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 .375rem;
+    border: 0;
+    border-radius: .375rem;
+    background: transparent;
+    color: #64748b;
+    font-size: 1.125rem;
+    line-height: 1;
+    box-shadow: none;
+}
+.btn:has(> .bi-three-dots-vertical) > .bi-three-dots-vertical { display: inline-block; transform: rotate(90deg); }
+.kk-kebab-toggle.kk-kebab-toggle-md { min-width: 2.25rem; height: 2.25rem; }
+.kk-kebab-toggle:hover,
+.btn:has(> .bi-three-dots-vertical):hover { background: #f1f5f9; color: #0f172a; }
+.kk-kebab-toggle[aria-expanded="true"],
+.kk-kebab-toggle.show,
+.kk-kebab-toggle:active,
+.btn:has(> .bi-three-dots-vertical)[aria-expanded="true"],
+.btn:has(> .bi-three-dots-vertical).show,
+.btn:has(> .bi-three-dots-vertical):active { background: #e2e8f0; color: #0f172a; }
+.kk-kebab-toggle:focus,
+.btn:has(> .bi-three-dots-vertical):focus { box-shadow: none; }
+.kk-kebab-toggle:focus-visible,
+.btn:has(> .bi-three-dots-vertical):focus-visible { outline: 2px solid var(--kk-accent, #4f46e5); outline-offset: 2px; }
+.kk-kebab-toggle:disabled,
+.btn:has(> .bi-three-dots-vertical):disabled { background: transparent; color: #cbd5e1; }
+@media (pointer: coarse) {
+    .kk-kebab-toggle,
+    .btn:has(> .bi-three-dots-vertical) { min-width: 2.5rem; height: 2.5rem; }
+}
 .kk-kebab .dropdown-menu form { margin: 0; }
 .kk-kebab .dropdown-menu button.dropdown-item { width: 100%; text-align: start; }
 

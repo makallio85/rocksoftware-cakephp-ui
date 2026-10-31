@@ -72,11 +72,11 @@ class ElementsTest extends TestCase
 
         $this->assertStringContainsString('<div class="dropdown kk-kebab">', $html);
         $this->assertStringContainsString(
-            '<button type="button" class="btn btn-outline-secondary kk-kebab-toggle btn-sm" data-bs-toggle="dropdown"',
+            '<button type="button" class="btn kk-kebab-toggle" data-bs-toggle="dropdown"',
             $html,
         );
         $this->assertStringContainsString('aria-label="Actions"', $html);
-        $this->assertStringContainsString('<i class="bi bi-three-dots-vertical" aria-hidden="true"></i>', $html);
+        $this->assertStringContainsString('<i class="bi bi-three-dots" aria-hidden="true"></i>', $html);
         $this->assertStringContainsString('<ul class="dropdown-menu dropdown-menu-end shadow-sm">', $html);
         $this->assertStringContainsString('<li><h6 class="dropdown-header">View</h6></li>', $html);
         $this->assertStringContainsString('<div class="dropdown-item-text"><span id="switch">switch</span></div>', $html);
@@ -127,7 +127,7 @@ class ElementsTest extends TestCase
         ]);
 
         $this->assertStringContainsString('aria-label="Message actions"', $html);
-        $this->assertStringContainsString('class="btn btn-outline-secondary kk-kebab-toggle"', $html);
+        $this->assertStringContainsString('class="btn kk-kebab-toggle kk-kebab-toggle-md"', $html);
     }
 
     public function testKebabLabelIsTranslated(): void
