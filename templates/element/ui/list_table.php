@@ -7,7 +7,8 @@
  * or the `vue` component).
  *
  * All rows on the page: the component sorts and filters them (a filter with
- * `matchField`, or a text filter, which searches the plain columns).
+ * `matchField`, or a text filter, which searches the plain columns; a column
+ * with `sortField` sorts by that row field, not by its shown cell).
  *
  * One page of rows from the server: pass `results` (the paginated rows).
  * The order is the paginator's, a header click reloads the page with

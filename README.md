@@ -591,7 +591,9 @@ With `results`, the order is the paginator's: a header click reloads the page wi
 reloads the page with its value (a text filter on Enter or when the field is left). Without
 `results`, the rows are all on the page and are sorted and filtered in the browser: a filter
 with `matchField` compares that row field, a text filter searches the plain columns (or a row's
-`_search`). A row with `url` opens it when clicked (`rowClickable`).
+`_search`), and a column with `sortField` sorts by that row field (give a link, badge or
+formatted date its plain value, e.g. an ISO date, under another key). A row with `url` opens it
+when clicked (`rowClickable`).
 
 Filters a person sets for themselves are kept in the browser with `rememberFilters`:
 

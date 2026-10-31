@@ -93,6 +93,23 @@ describe('the markup mounts', () => {
         expect(go).toHaveBeenCalledWith('/?kind=a');
     });
 
+    it('sorts a column with sortField by that row field, not by its shown cell', async () => {
+        const config = {
+            rows: [
+                { id: 1, day: '09.12.2026', daySort: '2026-12-09' },
+                { id: 2, day: '10.01.2026', daySort: '2026-01-10' },
+                { id: 3, day: '31.05.2026', daySort: '2026-05-31' },
+            ],
+            columns: [{ key: 'day', label: 'Day', sortField: 'daySort' }],
+            sortKey: 'day',
+        };
+        document.body.innerHTML = `<div data-kk-list-table><script type="application/json" data-kk-list-table-config>${JSON.stringify(config)}</script></div>`;
+        mountAll(document);
+        await settle();
+        const shown = Array.from(document.querySelectorAll('tbody tr')).map((tr) => tr.textContent.trim());
+        expect(shown).toEqual(['10.01.2026', '31.05.2026', '09.12.2026']);
+    });
+
     it('builds the addresses of a server-paged list', () => {
         expect(urlWith('http://x.test/list?page=3&q=old', { q: 'new' })).toBe('/list?q=new');
         expect(urlWith('http://x.test/list?q=old', { q: '' })).toBe('/list');
