@@ -60,10 +60,12 @@
 .kk-page-header-actions .btn { display: inline-flex; align-items: center; gap: 6px; }
 
 /* ------------------------------------------------------------------- kebab */
-/* A ghost button: a grey icon with no border or background, a light
-   background on hover and while the menu is open, an outline on keyboard
-   focus. `ui/kebab` draws it with `.kk-kebab-toggle`; any other ⋮ button
-   (whose content is the bi-three-dots-vertical icon) gets the same look. */
+/* A ghost button with horizontal dots (⋯): a grey icon with no border or
+   background, a light background on hover and while the menu is open, an
+   outline on keyboard focus. `ui/kebab` draws it with `.kk-kebab-toggle` and
+   the bi-three-dots icon; any other kebab (whose content is the
+   bi-three-dots-vertical icon) gets the same look, its icon turned a quarter
+   so it reads ⋯ too. */
 .kk-kebab { display: inline-block; }
 .kk-kebab-toggle,
 .btn:has(> .bi-three-dots-vertical) {
@@ -78,10 +80,11 @@
     border-radius: .375rem;
     background: transparent;
     color: #64748b;
-    font-size: 1rem;
+    font-size: 1.125rem;
     line-height: 1;
     box-shadow: none;
 }
+.btn:has(> .bi-three-dots-vertical) > .bi-three-dots-vertical { display: inline-block; transform: rotate(90deg); }
 .kk-kebab-toggle.kk-kebab-toggle-md { min-width: 2.25rem; height: 2.25rem; }
 .kk-kebab-toggle:hover,
 .btn:has(> .bi-three-dots-vertical):hover { background: #f1f5f9; color: #0f172a; }

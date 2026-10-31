@@ -76,7 +76,7 @@ class ElementsTest extends TestCase
             $html,
         );
         $this->assertStringContainsString('aria-label="Actions"', $html);
-        $this->assertStringContainsString('<i class="bi bi-three-dots-vertical" aria-hidden="true"></i>', $html);
+        $this->assertStringContainsString('<i class="bi bi-three-dots" aria-hidden="true"></i>', $html);
         $this->assertStringContainsString('<ul class="dropdown-menu dropdown-menu-end shadow-sm">', $html);
         $this->assertStringContainsString('<li><h6 class="dropdown-header">View</h6></li>', $html);
         $this->assertStringContainsString('<div class="dropdown-item-text"><span id="switch">switch</span></div>', $html);
