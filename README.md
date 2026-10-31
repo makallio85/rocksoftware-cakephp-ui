@@ -301,7 +301,13 @@ item is left.
 ], 'label' => 'Actions', 'size' => 'sm']) ?>
 ```
 
-`size` is `sm` (the default, for a row) or `md`.
+`size` is `sm` (the default, for a row) or `md` (a little larger, for a page header).
+
+The button is a ghost button: a grey `⋮` with no border or background, a light background on
+hover and while its menu is open, an outline on keyboard focus and a larger target on touch
+screens. Any other button whose content is the `bi-three-dots-vertical` icon (a hand-written
+Bootstrap dropdown toggle, a Vue component's) gets the same look from `kk-components.css`, so an
+application styles none of its own.
 
 A `button` item is a `<button type="button" class="dropdown-item">` with no address: its
 `attributes` (any HTML attributes) say what a script does with it, such as

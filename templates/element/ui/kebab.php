@@ -39,7 +39,8 @@ if ($hasAction === []) {
     return;
 }
 $label = isset($label) && is_string($label) && $label !== '' ? $label : __d('rock_software_ui', 'Actions');
-$buttonClass = 'btn btn-outline-secondary kk-kebab-toggle' . (($size ?? 'sm') === 'sm' ? ' btn-sm' : '');
+// A ghost button (kk-components.css); `md` is a little larger, for a page header.
+$buttonClass = 'btn kk-kebab-toggle' . (($size ?? 'sm') === 'sm' ? '' : ' kk-kebab-toggle-md');
 $icon = function (array $item): string {
     return isset($item['icon']) ? '<i class="' . h((string)$item['icon']) . '" aria-hidden="true"></i> ' : '';
 };
